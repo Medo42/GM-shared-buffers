@@ -1,4 +1,4 @@
-#include "public_api.h"
+#include "public_api.hpp"
 
 #include "HandleMap.hpp"
 #include "HandlePool.hpp"

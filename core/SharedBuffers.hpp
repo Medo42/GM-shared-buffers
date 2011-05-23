@@ -1,6 +1,6 @@
 #pragma once
 
-#include "public_api.h"
+#include "public_api.hpp"
 #include "NullBuffer.hpp"
 
 class SharedStream {

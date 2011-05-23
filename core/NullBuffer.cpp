@@ -1,6 +1,5 @@
 #include "NullBuffer.hpp"
 
-#include "public_api.h"
 #include <stdint.h>
 
 namespace nullbuffer {
