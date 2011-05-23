@@ -1,6 +1,6 @@
 #include "NullBuffer.hpp"
 
-#include "SharedBuffers.hpp"
+#include "public_api.h"
 #include <stdint.h>
 
 namespace nullbuffer {
@@ -32,9 +32,3 @@ namespace nullbuffer {
 		&setLength
 	};
 }
-
-const SharedBuffer nullBuffer = {
-	0,
-	&nullbuffer::streamInterface,
-	&nullbuffer::bufferInterface,
-};

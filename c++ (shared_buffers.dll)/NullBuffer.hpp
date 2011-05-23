@@ -1,5 +1,9 @@
 #pragma once
 
-#include "SharedBuffers.hpp"
+#include "public_api.h"
 
-extern const SharedBuffer nullBuffer;
+namespace nullbuffer {
+	extern SharedStreamInterface streamInterface;
+	extern SharedBufferInterface bufferInterface;
+}
+

@@ -9,12 +9,12 @@ HandlePool handlePool;
 HandleMap<SharedStream> streamHandles(handlePool);
 HandleMap<SharedBuffer> bufferHandles(handlePool);
 
-static const SharedBuffer findBuffer(uint32_t handle) {
+static SharedBuffer findBuffer(uint32_t handle) {
 	SharedBuffer *buffer = bufferHandles.find(handle);
 	if(buffer) {
 		return *buffer;
 	} else {
-		return nullBuffer;
+		return SharedBuffer();
 	}
 }
 
@@ -23,41 +23,32 @@ static const SharedBuffer findBuffer(uint32_t handle) {
  * converted to a stream. If nothing is found, a stream backed by the null buffer implementation
  * is returned.
  */
-static const SharedStream findStream(uint32_t handle) {
-	SharedStream *stream = streamHandles.find(handle);
+static SharedStream findStream(uint32_t handle) {
+	SharedStream* stream = streamHandles.find(handle);
 	if(stream) {
 		return *stream;
+	} else {
+		return findBuffer(handle);
 	}
-
-	// No stream found, make one from a buffer instead
-	SharedBuffer buffer = findBuffer(handle);
-	SharedStream result = {
-		buffer.instance,
-		buffer.streamInterface
-	};
-	return result;
 }
 
 extern "C" {
 	// Functions applicable for both buffers and streams
 	__stdcall uint32_t readData(uint32_t id, uint8_t* data, uint32_t size) {
-		SharedStream stream = findStream(id);
-		return (*stream.streamInterface->read)(stream.instance, data, size);
+		return findStream(id).read(data, size);
 	}
 
 	__stdcall void writeData(uint32_t id, const uint8_t* data, uint32_t size) {
-		SharedStream stream = findStream(id);
-		(*stream.streamInterface->write)(stream.instance, data, size);
+		findStream(id).write(data, size);
 	}
 
 	__stdcall uint32_t getBytesLeft(uint32_t id) {
-		SharedStream stream = findStream(id);
-		return (*stream.streamInterface->getBytesLeft)(stream.instance);
+		return findStream(id).getBytesLeft();
 	}
 
 	__stdcall void destroyStreamOrBuffer(uint32_t id) {
 		SharedStream stream = findStream(id);
-		if((*stream.streamInterface->destroy)(stream.instance)) {
+		if(findStream(id).destroy()) {
 			// We don't know here whether this is a stream or buffer handle,
 			// so we just release both - there can be no overlap so it's fine.
 			streamHandles.release(id);
@@ -71,33 +62,27 @@ extern "C" {
 
 	// Functions only applicable for buffers
 	__stdcall uint32_t getReadPos(uint32_t id) {
-		SharedBuffer buffer = findBuffer(id);
-		return (*buffer.bufferInterface->getreadpos)(buffer.instance);
+		return findBuffer(id).getreadpos();
 	}
 
 	__stdcall uint32_t getWritePos(uint32_t id) {
-		SharedBuffer buffer = findBuffer(id);
-		return (*buffer.bufferInterface->getwritepos)(buffer.instance);
+		return findBuffer(id).getwritepos();
 	}
 
 	__stdcall uint32_t getLength(uint32_t id) {
-		SharedBuffer buffer = findBuffer(id);
-		return (*buffer.bufferInterface->getlength)(buffer.instance);
+		return findBuffer(id).getlength();
 	}
 
 	__stdcall void setReadPos(uint32_t id, uint32_t pos) {
-		SharedBuffer buffer = findBuffer(id);
-		(*buffer.bufferInterface->setreadpos)(buffer.instance, pos);
+		findBuffer(id).setreadpos(pos);
 	}
 
 	__stdcall void setWritePos(uint32_t id, uint32_t pos) {
-		SharedBuffer buffer = findBuffer(id);
-		(*buffer.bufferInterface->setwritepos)(buffer.instance, pos);
+		findBuffer(id).setwritepos(pos);
 	}
 
 	__stdcall void setLength(uint32_t id, uint32_t length) {
-		SharedBuffer buffer = findBuffer(id);
-		(*buffer.bufferInterface->setlength)(buffer.instance, length);
+		findBuffer(id).setlength(length);
 	}
 
 	__stdcall uint8_t bufferExists(uint32_t id) {
@@ -105,12 +90,12 @@ extern "C" {
 	}
 
 	__stdcall uint32_t addStream(void* stream, SharedStreamInterface* streamInterface) {
-		SharedStream sharedStream = {stream, streamInterface};
+		SharedStream sharedStream(stream, streamInterface);
 		return streamHandles.allocate(sharedStream);
 	}
 
 	__stdcall uint32_t addBuffer(void* buffer, SharedStreamInterface *streamInterface, SharedBufferInterface *bufferInterface) {
-		SharedBuffer sharedBuffer = {buffer, streamInterface, bufferInterface};
+		SharedBuffer sharedBuffer(buffer, streamInterface, bufferInterface);
 		return bufferHandles.allocate(sharedBuffer);
 	}
 }
