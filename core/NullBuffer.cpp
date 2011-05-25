@@ -5,7 +5,8 @@
 namespace shb_internal {
 
 static __stdcall size_t read(void*, uint8_t*, size_t) { return 0; }
-static __stdcall void write(void*, const uint8_t*, size_t) {}
+static __stdcall void write(void*, const uint8_t*, size_t) { }
+static __stdcall void writeOther(void* impl, uint32_t sourceId, size_t size) { }
 static __stdcall size_t getBytesLeft(void*) { return 0; }
 static __stdcall uint8_t destroy(void*) { return true; }
 
@@ -19,6 +20,7 @@ static __stdcall void setLength(void*, size_t) { }
 shb_StreamInterface nullStreamInterface = {
 	&read,
 	&write,
+	&writeOther,
 	&getBytesLeft,
 	&destroy
 };

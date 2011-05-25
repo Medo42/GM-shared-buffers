@@ -17,15 +17,19 @@ public:
 
 	SharedStream() : instance(0), streamInterface(&nullStreamInterface) {}
 
-	uint32_t read(uint8_t* data, uint32_t size) {
+	size_t read(uint8_t* data, size_t size) {
 		return (*streamInterface->read)(instance, data, size);
 	}
 
-	void write(const uint8_t* data, uint32_t size) {
+	void write(const uint8_t* data, size_t size) {
 		(*streamInterface->write)(instance, data, size);
 	}
 
-	uint32_t getBytesLeft() {
+	void writeOther(uint32_t sourceId, size_t size) {
+		return (*streamInterface->writeOther)(instance, sourceId, size);
+	}
+
+	size_t getBytesLeft() {
 		return (*streamInterface->getBytesLeft)(instance);
 	}
 
@@ -45,27 +49,27 @@ public:
 
 	SharedBuffer() : SharedStream(), bufferInterface(&nullBufferInterface) {}
 
-	uint32_t getReadPos() {
+	size_t getReadPos() {
 		return (*bufferInterface->getReadPos)(instance);
 	}
 
-	uint32_t getWritePos() {
+	size_t getWritePos() {
 		return (*bufferInterface->getWritePos)(instance);
 	}
 
-	uint32_t getLength() {
+	size_t getLength() {
 		return (*bufferInterface->getLength)(instance);
 	}
 
-	void setReadPos(uint32_t pos) {
+	void setReadPos(size_t pos) {
 		(*bufferInterface->setReadPos)(instance, pos);
 	}
 
-	void setWritePos(uint32_t pos) {
+	void setWritePos(size_t pos) {
 		(*bufferInterface->setWritePos)(instance, pos);
 	}
 
-	void setLength(uint32_t length) {
+	void setLength(size_t length) {
 		(*bufferInterface->setLength)(instance, length);
 	}
 };

@@ -1,6 +1,8 @@
 #pragma once
 
 #include "AbstractBuffer.hpp"
+#include "core/core.hpp"
+
 #include <algorithm>
 #include <vector>
 #include <cstring>
@@ -9,17 +11,14 @@ namespace shb {
 
 class DefaultMemBuffer : public AbstractBuffer {
 	std::vector<uint8_t> data;
-	size_t readIndex;
-	size_t writeIndex;
+	size_t readPos;
+	size_t writePos;
 
 public:
-	DefaultMemBuffer() : data(), readIndex(0), writeIndex(0) {}
+	DefaultMemBuffer() : data(), readPos(0), writePos(0) {}
 
-	/**
-	 * Return the number of bytes still remaining to be read.
-	 */
 	size_t getBytesLeft() {
-		return data.size()-readIndex;
+		return data.size()-readPos;
 	}
 
 	/**
@@ -31,8 +30,8 @@ public:
 	 */
 	size_t read(uint8_t* out, size_t size) {
 		size = std::min(size, getBytesLeft());
-		memcpy(out, data.data()+readIndex, size);
-		readIndex += size;
+		memmove(out, data.data()+readPos, size);
+		readPos += size;
 		return size;
 	}
 
@@ -41,12 +40,21 @@ public:
 	 * The buffer is enlarged if required.
 	 */
 	void write(const uint8_t *in, size_t size) {
-		size_t newWriteIndex = writeIndex+size;
-		if(newWriteIndex > data.size()) {
-			data.resize(newWriteIndex);
+		size_t newWritePos = writePos+size;
+		if(newWritePos > data.size()) {
+			data.resize(newWritePos);
 		}
-		memcpy(data.data()+writeIndex, in, size);
-		writeIndex = newWriteIndex;
+		memmove(data.data()+writePos, in, size);
+		writePos = newWritePos;
+	}
+
+	void writeOther(uint32_t sourceId, size_t size) {
+		size_t newWritePos = writePos+size;
+		if(newWritePos > data.size()) {
+			data.resize(newWritePos);
+		}
+		shb_readData(sourceId, data.data()+writePos, size);
+		writePos = newWritePos;
 	}
 
 	uint8_t destroy() {
@@ -55,11 +63,11 @@ public:
 	}
 
 	size_t getReadPos() {
-		return readIndex;
+		return readPos;
 	}
 
 	size_t getWritePos() {
-		return writeIndex;
+		return writePos;
 	}
 
 	size_t getLength() {
@@ -67,17 +75,17 @@ public:
 	}
 
 	void setReadPos(size_t pos) {
-		readIndex = std::min(pos, data.size());
+		readPos = std::min(pos, data.size());
 	}
 
 	void setWritePos(size_t pos) {
-		writeIndex = std::min(pos, data.size());
+		writePos = std::min(pos, data.size());
 	}
 
 	void setLength(size_t length) {
 		data.resize(length);
-		readIndex = std::min(readIndex, data.size());
-		writeIndex = std::min(writeIndex, data.size());
+		readPos = std::min(readPos, data.size());
+		writePos = std::min(writePos, data.size());
 	}
 };
 

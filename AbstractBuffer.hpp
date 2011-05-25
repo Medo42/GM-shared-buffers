@@ -9,6 +9,7 @@ class AbstractStream {
 public:
 	virtual size_t read(uint8_t* data, size_t size) = 0;
 	virtual void write(const uint8_t* data, size_t size) = 0;
+	virtual void writeOther(uint32_t sourceId, size_t size) = 0;
 	virtual size_t getBytesLeft() = 0;
 	virtual uint8_t destroy() = 0;
 
