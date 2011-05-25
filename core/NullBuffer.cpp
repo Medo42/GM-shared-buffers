@@ -2,32 +2,34 @@
 
 #include <stdint.h>
 
-namespace nullbuffer {
-	__stdcall uint32_t read(void*, uint8_t*, uint32_t) { return 0; }
-	__stdcall void write(void*, const uint8_t*, uint32_t) {}
-	__stdcall uint32_t getBytesLeft(void*) { return 0; }
-	__stdcall uint8_t destroy(void*) { return true; }
+namespace shb_internal {
 
-	__stdcall uint32_t getReadPos(void*) { return 0; }
-	__stdcall uint32_t getWritePos(void*) { return 0; }
-	__stdcall uint32_t getLength(void*) { return 0; }
-	__stdcall void setReadPos(void*, uint32_t) { }
-	__stdcall void setWritePos(void*, uint32_t) { }
-	__stdcall void setLength(void*, uint32_t) { }
+static __stdcall size_t read(void*, uint8_t*, size_t) { return 0; }
+static __stdcall void write(void*, const uint8_t*, size_t) {}
+static __stdcall size_t getBytesLeft(void*) { return 0; }
+static __stdcall uint8_t destroy(void*) { return true; }
 
-	SharedStreamInterface streamInterface = {
-		&read,
-		&write,
-		&getBytesLeft,
-		&destroy
-	};
+static __stdcall size_t getReadPos(void*) { return 0; }
+static __stdcall size_t getWritePos(void*) { return 0; }
+static __stdcall size_t getLength(void*) { return 0; }
+static __stdcall void setReadPos(void*, size_t) { }
+static __stdcall void setWritePos(void*, size_t) { }
+static __stdcall void setLength(void*, size_t) { }
 
-	SharedBufferInterface bufferInterface = {
-		&getReadPos,
-		&getWritePos,
-		&getLength,
-		&setReadPos,
-		&setWritePos,
-		&setLength
-	};
+shb_StreamInterface nullStreamInterface = {
+	&read,
+	&write,
+	&getBytesLeft,
+	&destroy
+};
+
+shb_BufferInterface nullBufferInterface = {
+	&getReadPos,
+	&getWritePos,
+	&getLength,
+	&setReadPos,
+	&setWritePos,
+	&setLength
+};
+
 }

@@ -5,8 +5,10 @@
 #include <stdint.h>
 #include <map>
 
+namespace shb_internal {
+
 /**
- * Provides unique handles to objects and allows access by that handle.
+ * Stores objects and provides access to them through unique handles.
  *
  * All HandleManagers that use the same HandlePool will hold disjoint
  * sets of handles.
@@ -43,7 +45,7 @@ public:
 
 	/**
 	 * Return a pointer to the element associated with the given handle,
-	 * or a null pointer if this Manager does not hold the handle.
+	 * or a null pointer if this Map does not hold the handle.
 	 *
 	 * Note that you will also get NULL as result if the given handle has
 	 * previously been associated with NULL.
@@ -67,3 +69,5 @@ public:
 		}
 	}
 };
+
+}

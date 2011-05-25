@@ -3,6 +3,8 @@
 #include <stdint.h>
 #include <set>
 
+namespace shb_internal {
+
 /**
  * Generates unique integer values for use as handles.
  *
@@ -32,3 +34,5 @@ public:
 		usedHandles.erase(handle);
 	}
 };
+
+}

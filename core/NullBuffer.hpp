@@ -1,9 +1,11 @@
 #pragma once
 
-#include "public_api.hpp"
+#include "core.hpp"
 
-namespace nullbuffer {
-	extern SharedStreamInterface streamInterface;
-	extern SharedBufferInterface bufferInterface;
+namespace shb_internal {
+
+extern shb_StreamInterface nullStreamInterface;
+extern shb_BufferInterface nullBufferInterface;
+
 }
 

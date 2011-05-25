@@ -1,19 +1,21 @@
 #pragma once
 
-#include "public_api.hpp"
+#include "core.hpp"
 #include "NullBuffer.hpp"
+
+namespace shb_internal {
 
 class SharedStream {
 protected:
 	void *instance;
-	SharedStreamInterface* streamInterface;
+	shb_StreamInterface* streamInterface;
 
 public:
-	SharedStream(void *instance, SharedStreamInterface* streamInterface) :
+	SharedStream(void *instance, shb_StreamInterface* streamInterface) :
 		instance(instance),
 		streamInterface(streamInterface) {}
 
-	SharedStream() : instance(0), streamInterface(&nullbuffer::streamInterface) {}
+	SharedStream() : instance(0), streamInterface(&nullStreamInterface) {}
 
 	uint32_t read(uint8_t* data, uint32_t size) {
 		return (*streamInterface->read)(instance, data, size);
@@ -34,36 +36,38 @@ public:
 
 class SharedBuffer : public SharedStream {
 protected:
-	SharedBufferInterface* bufferInterface;
+	shb_BufferInterface* bufferInterface;
 
 public:
-	SharedBuffer(void *instance, SharedStreamInterface* streamInterface, SharedBufferInterface* bufferInterface) :
+	SharedBuffer(void *instance, shb_StreamInterface* streamInterface, shb_BufferInterface* bufferInterface) :
 		SharedStream(instance, streamInterface),
 		bufferInterface(bufferInterface) {}
 
-	SharedBuffer() : SharedStream(), bufferInterface(&nullbuffer::bufferInterface) {}
+	SharedBuffer() : SharedStream(), bufferInterface(&nullBufferInterface) {}
 
-	uint32_t getreadpos() {
-		return (*bufferInterface->getreadpos)(instance);
+	uint32_t getReadPos() {
+		return (*bufferInterface->getReadPos)(instance);
 	}
 
-	uint32_t getwritepos() {
-		return (*bufferInterface->getwritepos)(instance);
+	uint32_t getWritePos() {
+		return (*bufferInterface->getWritePos)(instance);
 	}
 
-	uint32_t getlength() {
-		return (*bufferInterface->getlength)(instance);
+	uint32_t getLength() {
+		return (*bufferInterface->getLength)(instance);
 	}
 
-	void setreadpos(uint32_t pos) {
-		(*bufferInterface->setreadpos)(instance, pos);
+	void setReadPos(uint32_t pos) {
+		(*bufferInterface->setReadPos)(instance, pos);
 	}
 
-	void setwritepos(uint32_t pos) {
-		(*bufferInterface->setwritepos)(instance, pos);
+	void setWritePos(uint32_t pos) {
+		(*bufferInterface->setWritePos)(instance, pos);
 	}
 
-	void setlength(uint32_t length) {
-		(*bufferInterface->setlength)(instance, length);
+	void setLength(uint32_t length) {
+		(*bufferInterface->setLength)(instance, length);
 	}
 };
+
+}
