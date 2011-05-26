@@ -13,10 +13,6 @@ static __stdcall void write(void* impl, const uint8_t* data, size_t size) {
 	return static_cast<AbstractStream*>(impl)->write(data, size);
 }
 
-static __stdcall void writeOther(void* impl, uint32_t sourceId, size_t size) {
-	return static_cast<AbstractStream*>(impl)->writeOther(sourceId, size);
-}
-
 static __stdcall size_t getBytesLeft(void* impl) {
 	return static_cast<AbstractStream*>(impl)->getBytesLeft();
 }
@@ -45,14 +41,17 @@ static __stdcall void setWritePos(void* impl, size_t pos) {
 	return static_cast<AbstractBuffer*>(static_cast<AbstractStream*>(impl))->setWritePos(pos);
 }
 
-static __stdcall void setLength(void* impl, size_t length) {
+static __stdcall uint8_t setLength(void* impl, size_t length) {
 	return static_cast<AbstractBuffer*>(static_cast<AbstractStream*>(impl))->setLength(length);
+}
+
+static __stdcall uint8_t* getData(void* impl) {
+	return static_cast<AbstractBuffer*>(static_cast<AbstractStream*>(impl))->getData();
 }
 
 static shb_StreamInterface abstractStreamInterface = {
 	&read,
 	&write,
-	&writeOther,
 	&getBytesLeft,
 	&destroy
 };
@@ -63,7 +62,8 @@ static shb_BufferInterface abstractBufferInterface = {
 	&getLength,
 	&setReadPos,
 	&setWritePos,
-	&setLength
+	&setLength,
+	&getData
 };
 
 }

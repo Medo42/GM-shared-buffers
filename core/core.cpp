@@ -38,10 +38,6 @@ extern "C" {
 		return findStreamOrBuffer(id).write(data, size);
 	}
 
-	__stdcall void shb_writeOther(uint32_t id, uint32_t sourceId, size_t size) {
-		return findStreamOrBuffer(id).writeOther(sourceId, size);
-	}
-
 	__stdcall size_t shb_getBytesLeft(uint32_t id) {
 		return findStreamOrBuffer(id).getBytesLeft();
 	}
@@ -81,8 +77,12 @@ extern "C" {
 		return findBuffer(id).setWritePos(pos);
 	}
 
-	__stdcall void shb_setLength(uint32_t id, size_t length) {
+	__stdcall uint8_t shb_setLength(uint32_t id, size_t length) {
 		return findBuffer(id).setLength(length);
+	}
+
+	__stdcall uint8_t* getData(uint32_t id) {
+		return findBuffer(id).getData();
 	}
 
 	__stdcall uint8_t shb_bufferExists(uint32_t id) {

@@ -1,24 +1,25 @@
 #pragma once
 
 #include "AbstractBuffer.hpp"
-#include "core/core.hpp"
 
 #include <algorithm>
-#include <vector>
 #include <cstring>
 
 namespace shb {
 
 class DefaultMemBuffer : public AbstractBuffer {
-	std::vector<uint8_t> data;
+	static const size_t MIN_CAPACITY = 16;
+	uint8_t* data;
+
 	size_t readPos;
 	size_t writePos;
 
-public:
-	DefaultMemBuffer() : data(), readPos(0), writePos(0) {}
+	size_t capacity;
+	size_t length;
 
-	size_t getBytesLeft() {
-		return data.size()-readPos;
+public:
+	DefaultMemBuffer() : data(0), readPos(0), writePos(0), capacity(0), length(0) {
+		setLength(0);
 	}
 
 	/**
@@ -30,7 +31,7 @@ public:
 	 */
 	size_t read(uint8_t* out, size_t size) {
 		size = std::min(size, getBytesLeft());
-		memmove(out, data.data()+readPos, size);
+		memmove(out, data+readPos, size);
 		readPos += size;
 		return size;
 	}
@@ -41,20 +42,15 @@ public:
 	 */
 	void write(const uint8_t *in, size_t size) {
 		size_t newWritePos = writePos+size;
-		if(newWritePos > data.size()) {
-			data.resize(newWritePos);
+		if(newWritePos > length) {
+			setLength(newWritePos);
 		}
-		memmove(data.data()+writePos, in, size);
+		memmove(data+writePos, in, size);
 		writePos = newWritePos;
 	}
 
-	void writeOther(uint32_t sourceId, size_t size) {
-		size_t newWritePos = writePos+size;
-		if(newWritePos > data.size()) {
-			data.resize(newWritePos);
-		}
-		shb_readData(sourceId, data.data()+writePos, size);
-		writePos = newWritePos;
+	size_t getBytesLeft() {
+		return length-readPos;
 	}
 
 	uint8_t destroy() {
@@ -71,21 +67,50 @@ public:
 	}
 
 	size_t getLength() {
-		return data.size();
+		return length;
 	}
 
 	void setReadPos(size_t pos) {
-		readPos = std::min(pos, data.size());
+		readPos = std::min(pos, length);
 	}
 
 	void setWritePos(size_t pos) {
-		writePos = std::min(pos, data.size());
+		writePos = std::min(pos, length);
 	}
 
-	void setLength(size_t length) {
-		data.resize(length);
-		readPos = std::min(readPos, data.size());
-		writePos = std::min(writePos, data.size());
+	uint8_t setLength(size_t newLength) {
+		size_t newCapacity = capacity;
+		if(newLength > capacity) {
+			// grow by at least 50% to ensure constant amortized insert time
+			// but as little as possible beyond that to conserve memory.
+			newCapacity = std::max(capacity + capacity / 2, newLength);
+		} else if(newLength <= capacity / 2) {
+			// keep 25% more than required
+			newCapacity = newLength + newLength / 4;
+		}
+		newCapacity = std::max(newCapacity, MIN_CAPACITY);
+
+		if(newCapacity != capacity) {
+			void *temp = realloc(data, newCapacity);
+			if(temp==NULL) {
+				throw std::bad_alloc();
+			}
+			data = static_cast<uint8_t*>(temp);
+		}
+
+		if(newLength > length) {
+			memset(data + length, 0, newLength - length);
+		}
+
+		length = newLength;
+		capacity = newCapacity;
+		readPos = std::min(readPos, length);
+		writePos = std::min(writePos, length);
+		return true;
+	}
+
+	uint8_t* getData() {
+		return data;
 	}
 };
 

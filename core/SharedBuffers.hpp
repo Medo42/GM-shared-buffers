@@ -25,10 +25,6 @@ public:
 		(*streamInterface->write)(instance, data, size);
 	}
 
-	void writeOther(uint32_t sourceId, size_t size) {
-		return (*streamInterface->writeOther)(instance, sourceId, size);
-	}
-
 	size_t getBytesLeft() {
 		return (*streamInterface->getBytesLeft)(instance);
 	}
@@ -43,7 +39,7 @@ protected:
 	shb_BufferInterface* bufferInterface;
 
 public:
-	SharedBuffer(void *instance, shb_StreamInterface* streamInterface, shb_BufferInterface* bufferInterface) :
+	SharedBuffer(void* instance, shb_StreamInterface* streamInterface, shb_BufferInterface* bufferInterface) :
 		SharedStream(instance, streamInterface),
 		bufferInterface(bufferInterface) {}
 
@@ -69,8 +65,12 @@ public:
 		(*bufferInterface->setWritePos)(instance, pos);
 	}
 
-	void setLength(size_t length) {
+	uint8_t setLength(size_t length) {
 		(*bufferInterface->setLength)(instance, length);
+	}
+
+	uint8_t* getData() {
+		return (*bufferInterface->getData)(instance);
 	}
 };
 
