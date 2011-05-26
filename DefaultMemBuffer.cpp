@@ -37,11 +37,6 @@ size_t DefaultMemBuffer::getBytesLeft() {
 	return length-readPos;
 }
 
-uint8_t DefaultMemBuffer::destroy() {
-	// TODO
-	return true;
-}
-
 size_t DefaultMemBuffer::getReadPos() {
 	return readPos;
 }

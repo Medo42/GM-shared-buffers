@@ -10,12 +10,25 @@ protected:
 	void *instance;
 	shb_StreamInterface* streamInterface;
 
-public:
-	SharedStream(void *instance, shb_StreamInterface* streamInterface) :
-		instance(instance),
-		streamInterface(streamInterface) {}
+	void *destroyHandler;
+	uint8_t (__stdcall *destroyCallback)(void* impl, uint32_t bufferId);
 
-	SharedStream() : instance(0), streamInterface(&nullStreamInterface) {}
+public:
+	SharedStream(
+			void *instance,
+			shb_StreamInterface* streamInterface,
+			void *destroyHandler,
+			uint8_t (__stdcall *destroyCallback)(void* impl, uint32_t bufferId)) :
+		instance(instance),
+		streamInterface(streamInterface),
+		destroyHandler(destroyHandler),
+		destroyCallback(destroyCallback) {}
+
+	SharedStream() :
+		instance(0),
+		streamInterface(&nullStreamInterface) ,
+		destroyHandler(0),
+		destroyCallback(&nullDestroyHandler) {}
 
 	size_t read(uint8_t* data, size_t size) {
 		return (*streamInterface->read)(instance, data, size);
@@ -29,8 +42,8 @@ public:
 		return (*streamInterface->getBytesLeft)(instance);
 	}
 
-	uint8_t destroy() {
-		return (*streamInterface->destroy)(instance);
+	uint8_t destroy(uint32_t id) {
+		return (*destroyCallback)(destroyHandler, id);
 	}
 };
 
@@ -39,8 +52,13 @@ protected:
 	shb_BufferInterface* bufferInterface;
 
 public:
-	SharedBuffer(void* instance, shb_StreamInterface* streamInterface, shb_BufferInterface* bufferInterface) :
-		SharedStream(instance, streamInterface),
+	SharedBuffer(
+			void* instance,
+			shb_StreamInterface* streamInterface,
+			shb_BufferInterface* bufferInterface,
+			void *destroyHandler,
+			uint8_t (__stdcall *destroyCallback)(void* impl, uint32_t bufferId)) :
+		SharedStream(instance, streamInterface, destroyHandler, destroyCallback),
 		bufferInterface(bufferInterface) {}
 
 	SharedBuffer() : SharedStream(), bufferInterface(&nullBufferInterface) {}
@@ -66,7 +84,7 @@ public:
 	}
 
 	uint8_t setLength(size_t length) {
-		(*bufferInterface->setLength)(instance, length);
+		return (*bufferInterface->setLength)(instance, length);
 	}
 
 	uint8_t* getData() {

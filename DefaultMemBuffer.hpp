@@ -23,7 +23,6 @@ public:
 	virtual size_t read(uint8_t* out, size_t size);
 	virtual void write(const uint8_t *in, size_t size);
 	virtual size_t getBytesLeft();
-	virtual uint8_t destroy();
 
 	virtual size_t getReadPos();
 	virtual size_t getWritePos();

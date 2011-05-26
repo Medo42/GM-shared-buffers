@@ -17,10 +17,6 @@ static __stdcall size_t getBytesLeft(void* impl) {
 	return static_cast<AbstractStream*>(impl)->getBytesLeft();
 }
 
-static __stdcall uint8_t destroy(void* impl) {
-	return static_cast<AbstractStream*>(impl)->destroy();
-}
-
 static __stdcall size_t getReadPos(void* impl) {
 	return static_cast<AbstractBuffer*>(static_cast<AbstractStream*>(impl))->getReadPos();
 }
@@ -49,11 +45,14 @@ static __stdcall uint8_t* getData(void* impl) {
 	return static_cast<AbstractBuffer*>(static_cast<AbstractStream*>(impl))->getData();
 }
 
+static __stdcall uint8_t destroyHandler(void* impl, uint32_t bufferId) {
+	return static_cast<AbstractBufferManager*>(impl)->destroy(bufferId);
+}
+
 static shb_StreamInterface abstractStreamInterface = {
 	&read,
 	&write,
-	&getBytesLeft,
-	&destroy
+	&getBytesLeft
 };
 
 static shb_BufferInterface abstractBufferInterface = {
@@ -71,12 +70,13 @@ static shb_BufferInterface abstractBufferInterface = {
 namespace shb {
 using namespace shb_internal;
 
-uint32_t shareStream(AbstractStream *stream) {
-	return shb_shareStream(stream, &abstractStreamInterface);
+uint32_t shareStream(AbstractStream *stream, AbstractBufferManager *manager) {
+	return shb_shareStream(stream, &abstractStreamInterface, manager, &destroyHandler);
 }
 
-uint32_t shareBuffer(AbstractBuffer *buffer) {
-	return shb_shareBuffer(static_cast<AbstractStream*>(buffer), &abstractStreamInterface, &abstractBufferInterface);
+uint32_t shareBuffer(AbstractBuffer *buffer, AbstractBufferManager *manager) {
+	AbstractStream* stream = static_cast<AbstractStream*>(buffer);
+	return shb_shareBuffer(stream, &abstractStreamInterface, &abstractBufferInterface, manager, &destroyHandler);
 }
 
 }

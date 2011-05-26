@@ -7,7 +7,6 @@ typedef struct {
 	size_t (__stdcall *read)(void* impl, uint8_t* data, size_t size);
 	void (__stdcall *write)(void* impl, const uint8_t* data, size_t size);
 	size_t (__stdcall *getBytesLeft)(void* impl);
-	uint8_t (__stdcall *destroy)(void* impl);
 } shb_StreamInterface;
 
 typedef struct {
@@ -25,7 +24,6 @@ extern "C" {
 	__stdcall size_t shb_readData(uint32_t id, uint8_t* data, size_t size);
 	__stdcall void shb_writeData(uint32_t id, const uint8_t* data, size_t size);
 	__stdcall size_t shb_getBytesLeft(uint32_t id);
-	__stdcall void shb_destroy(uint32_t id);
 	__stdcall uint8_t shb_streamOrBufferExists(uint32_t id);
 
 	// Functions only applicable for buffers
@@ -38,6 +36,18 @@ extern "C" {
 	__stdcall uint8_t* getData(uint32_t id);
 	__stdcall uint8_t shb_bufferExists(uint32_t id);
 
-	__stdcall uint32_t shb_shareStream(void* stream, shb_StreamInterface* streamInterface);
-	__stdcall uint32_t shb_shareBuffer(void* buffer, shb_StreamInterface* streamInterface, shb_BufferInterface* bufferInterface);
+	__stdcall uint32_t shb_shareStream(
+			void* stream,
+			shb_StreamInterface* streamInterface,
+			void* destroyHandlerImpl,
+			uint8_t (__stdcall *destroyCallback)(void* impl, uint32_t bufferId));
+
+	__stdcall uint32_t shb_shareBuffer(
+			void* buffer,
+			shb_StreamInterface* streamInterface,
+			shb_BufferInterface* bufferInterface,
+			void* destroyHandlerImpl,
+			uint8_t (__stdcall *destroyCallback)(void* impl, uint32_t bufferId));
+
+	__stdcall void shb_destroy(uint32_t id);
 }
