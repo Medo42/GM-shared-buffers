@@ -1,8 +1,8 @@
 #include "AbstractBufferManager.hpp"
 
-#include "public_core_api.hpp"
 #include "SharedBuffersCore.hpp"
 #include "AbstractBuffer.hpp"
+#include "public_core_api.hpp"
 
 namespace shb_internal {
 using namespace shb;
