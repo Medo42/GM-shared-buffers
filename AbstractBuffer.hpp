@@ -1,7 +1,7 @@
 #pragma once
 
-#include <stdint.h>
 #include <stddef.h>
+#include <stdint.h>
 
 namespace shb {
 
@@ -26,15 +26,5 @@ public:
 
 	virtual ~AbstractBuffer() {}
 };
-
-class AbstractBufferManager {
-public:
-	virtual uint8_t destroy(uint32_t bufferId) = 0;
-
-	virtual ~AbstractBufferManager() {}
-};
-
-uint32_t shareStream(AbstractStream *stream, AbstractBufferManager *manager);
-uint32_t shareBuffer(AbstractBuffer *buffer, AbstractBufferManager *manager);
 
 }

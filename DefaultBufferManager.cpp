@@ -1,10 +1,12 @@
 #include "DefaultBufferManager.hpp"
-#include "core/core.hpp"
+
+#include "AbstractBuffer.hpp"
+#include "SharedBuffersCore.hpp"
 
 using namespace shb;
 
-DefaultBufferManager::DefaultBufferManager() :
-		destructableBuffers(), indestructableBuffers() {}
+DefaultBufferManager::DefaultBufferManager(SharedBuffersCore* core) :
+		AbstractBufferManager(core), destructableBuffers(), indestructableBuffers() {}
 
 uint8_t DefaultBufferManager::destroy(uint32_t bufferId) {
 	if(destructableBuffers.count(bufferId) != 0) {
@@ -20,9 +22,9 @@ uint32_t DefaultBufferManager::shareTransferOwnership(AbstractStream* stream, bo
 	AbstractBuffer* buffer = dynamic_cast<AbstractBuffer*>(stream);
 	uint32_t bufferId;
 	if(buffer) {
-		bufferId = shareBuffer(buffer, this);
+		bufferId = shareBuffer(buffer);
 	} else {
-		bufferId = shareStream(stream, this);
+		bufferId = shareStream(stream);
 	}
 
 	if(destructable) {
@@ -41,5 +43,5 @@ void DefaultBufferManager::forceDestroy(uint32_t bufferId) {
 		// The buffer is not managed here, do nothing
 		return;
 	}
-	shb_destroy(bufferId);
+	core->destroy(bufferId);
 }

@@ -1,6 +1,8 @@
-#include "AbstractBuffer.hpp"
+#include "AbstractBufferManager.hpp"
 
-#include "core/core.hpp"
+#include "public_core_api.hpp"
+#include "SharedBuffersCore.hpp"
+#include "AbstractBuffer.hpp"
 
 namespace shb_internal {
 using namespace shb;
@@ -45,10 +47,6 @@ static __stdcall uint8_t* getData(void* impl) {
 	return static_cast<AbstractBuffer*>(static_cast<AbstractStream*>(impl))->getData();
 }
 
-static __stdcall uint8_t destroyHandler(void* impl, uint32_t bufferId) {
-	return static_cast<AbstractBufferManager*>(impl)->destroy(bufferId);
-}
-
 static shb_StreamInterface abstractStreamInterface = {
 	&read,
 	&write,
@@ -70,13 +68,20 @@ static shb_BufferInterface abstractBufferInterface = {
 namespace shb {
 using namespace shb_internal;
 
-uint32_t shareStream(AbstractStream *stream, AbstractBufferManager *manager) {
-	return shb_shareStream(stream, &abstractStreamInterface, manager, &destroyHandler);
+__stdcall uint8_t AbstractBufferManager::destroyHandler(void* impl, uint32_t bufferId) {
+	return static_cast<AbstractBufferManager*>(impl)->destroyCallback(bufferId);
 }
 
-uint32_t shareBuffer(AbstractBuffer *buffer, AbstractBufferManager *manager) {
+uint32_t AbstractBufferManager::shareBuffer(AbstractBuffer* buffer) {
 	AbstractStream* stream = static_cast<AbstractStream*>(buffer);
-	return shb_shareBuffer(stream, &abstractStreamInterface, &abstractBufferInterface, manager, &destroyHandler);
+	return (*core->getCoreApi()->shareBuffer)(stream, &abstractStreamInterface, &abstractBufferInterface, this, &destroyHandler);
 }
+
+uint32_t AbstractBufferManager::shareStream(AbstractStream* stream) {
+	return (*core->getCoreApi()->shareStream)(stream, &abstractStreamInterface, this, &destroyHandler);
+}
+
+AbstractBufferManager::AbstractBufferManager(SharedBuffersCore* core) : core(core) {}
+AbstractBufferManager::~AbstractBufferManager() {}
 
 }

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "AbstractBuffer.hpp"
+#include "AbstractBufferManager.hpp"
 #include <map>
 
 namespace shb {
@@ -9,10 +9,11 @@ class DefaultBufferManager : public AbstractBufferManager {
 	std::map<uint32_t, AbstractStream*> destructableBuffers;
 	std::map<uint32_t, AbstractStream*> indestructableBuffers;
 
-public:
-	DefaultBufferManager();
-
+protected:
 	virtual uint8_t destroy(uint32_t bufferId);
+
+public:
+	DefaultBufferManager(SharedBuffersCore* core);
 
 	/**
 	 * Register the buffer or stream in the shared buffers library and transfer its

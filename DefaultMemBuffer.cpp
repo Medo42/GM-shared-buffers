@@ -1,5 +1,8 @@
 #include "DefaultMemBuffer.hpp"
 
+#include <algorithm>
+#include <cstring>
+
 using namespace shb;
 
 DefaultMemBuffer::DefaultMemBuffer() : data(0), readPos(0), writePos(0), capacity(0), length(0) {

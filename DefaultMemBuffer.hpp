@@ -2,9 +2,6 @@
 
 #include "AbstractBuffer.hpp"
 
-#include <algorithm>
-#include <cstring>
-
 namespace shb {
 
 class DefaultMemBuffer : public AbstractBuffer {
