@@ -2,12 +2,12 @@
 
 #include "SharedBuffersCore.hpp"
 #include "AbstractBuffer.hpp"
-#include "public_core_api.hpp"
+#include "core/public_core_api.hpp"
 
 namespace shb_internal {
 using namespace shb;
 
-static __stdcall size_t read(void* impl, uint8_t* data, size_t size) {
+static __stdcall void read(void* impl, uint8_t* data, size_t size) {
 	return static_cast<AbstractStream*>(impl)->read(data, size);
 }
 
@@ -43,10 +43,6 @@ static __stdcall uint8_t setLength(void* impl, size_t length) {
 	return static_cast<AbstractBuffer*>(static_cast<AbstractStream*>(impl))->setLength(length);
 }
 
-static __stdcall uint8_t* getData(void* impl) {
-	return static_cast<AbstractBuffer*>(static_cast<AbstractStream*>(impl))->getData();
-}
-
 static shb_StreamInterface abstractStreamInterface = {
 	&read,
 	&write,
@@ -60,7 +56,6 @@ static shb_BufferInterface abstractBufferInterface = {
 	&setReadPos,
 	&setWritePos,
 	&setLength,
-	&getData
 };
 
 }

@@ -17,17 +17,15 @@ class DefaultMemBuffer : public AbstractBuffer {
 public:
 	DefaultMemBuffer();
 
-	virtual size_t read(uint8_t* out, size_t size);
+	virtual void read(uint8_t* out, size_t size);
 	virtual void write(const uint8_t *in, size_t size);
-	virtual size_t getBytesLeft();
 
 	virtual size_t getReadPos();
 	virtual size_t getWritePos();
 	virtual size_t getLength();
 	virtual void setReadPos(size_t pos);
 	virtual void setWritePos(size_t pos);
-	virtual uint8_t setLength(size_t newLength);
-	virtual uint8_t* getData();
+	virtual bool setLength(size_t newLength);
 };
 
 }

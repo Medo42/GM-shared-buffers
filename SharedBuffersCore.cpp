@@ -1,5 +1,5 @@
 #include "SharedBuffersCore.hpp"
-#include "public_core_api.hpp"
+#include "core/public_core_api.hpp"
 
 namespace shb {
 
@@ -11,12 +11,10 @@ const shb_CoreApi* SharedBuffersCore::getCoreApi() {
 }
 
 // Functions applicable to streams and buffers
-size_t SharedBuffersCore::read(uint32_t id, uint8_t* data, size_t size) {
+void SharedBuffersCore::read(uint32_t id, uint8_t* data, size_t size) {
 	shb_Stream* stream = (*coreApi->findStream)(id);
 	if(stream) {
-		return (*stream->streamInterface->read)(stream->implementation, data, size);
-	} else {
-		return 0;
+		(*stream->streamInterface->read)(stream->implementation, data, size);
 	}
 }
 
@@ -84,15 +82,6 @@ bool SharedBuffersCore::setLength(uint32_t id, size_t length) {
 		return (*buffer->bufferInterface->setLength)(buffer->implementation, length);
 	} else {
 		return false;
-	}
-}
-
-uint8_t* SharedBuffersCore::getData(uint32_t id) {
-	shb_Buffer* buffer = (*coreApi->findBuffer)(id);
-	if(buffer) {
-		return (*buffer->bufferInterface->getData)(buffer->implementation);
-	} else {
-		return 0;
 	}
 }
 

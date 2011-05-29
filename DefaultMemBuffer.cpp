@@ -16,11 +16,10 @@ DefaultMemBuffer::DefaultMemBuffer() : data(0), readPos(0), writePos(0), capacit
  * provided array is not changed. The number of bytes
  * actually read is returned.
  */
-size_t DefaultMemBuffer::read(uint8_t* out, size_t size) {
+void DefaultMemBuffer::read(uint8_t* out, size_t size) {
 	size = std::min(size, getBytesLeft());
 	memmove(out, data+readPos, size);
 	readPos += size;
-	return size;
 }
 
 /**
@@ -34,10 +33,6 @@ void DefaultMemBuffer::write(const uint8_t *in, size_t size) {
 	}
 	memmove(data+writePos, in, size);
 	writePos = newWritePos;
-}
-
-size_t DefaultMemBuffer::getBytesLeft() {
-	return length-readPos;
 }
 
 size_t DefaultMemBuffer::getReadPos() {
@@ -60,7 +55,7 @@ void DefaultMemBuffer::setWritePos(size_t pos) {
 	writePos = std::min(pos, length);
 }
 
-uint8_t DefaultMemBuffer::setLength(size_t newLength) {
+bool DefaultMemBuffer::setLength(size_t newLength) {
 	size_t newCapacity = capacity;
 	if(newLength > capacity) {
 		// grow by at least 50% to ensure constant amortized insert time
@@ -89,8 +84,4 @@ uint8_t DefaultMemBuffer::setLength(size_t newLength) {
 	readPos = std::min(readPos, length);
 	writePos = std::min(writePos, length);
 	return true;
-}
-
-uint8_t* DefaultMemBuffer::getData() {
-	return data;
 }

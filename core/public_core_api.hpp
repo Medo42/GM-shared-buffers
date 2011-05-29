@@ -4,7 +4,7 @@
 #include <stddef.h>
 
 struct shb_StreamInterface {
-	size_t (__stdcall *read)(void* impl, uint8_t* data, size_t size);
+	void (__stdcall *read)(void* impl, uint8_t* data, size_t size);
 	void (__stdcall *write)(void* impl, const uint8_t* data, size_t size);
 	size_t (__stdcall *getBytesLeft)(void* impl);
 };
@@ -16,7 +16,6 @@ struct shb_BufferInterface {
 	void (__stdcall *setReadPos)(void* impl, size_t pos);
 	void (__stdcall *setWritePos)(void* impl, size_t pos);
 	uint8_t (__stdcall *setLength)(void* impl, size_t length);
-	uint8_t* (__stdcall *getData)(void* impl);
 };
 
 struct shb_Stream {
