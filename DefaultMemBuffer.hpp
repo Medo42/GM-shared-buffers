@@ -26,6 +26,7 @@ public:
 	virtual void setReadPos(size_t pos);
 	virtual void setWritePos(size_t pos);
 	virtual bool setLength(size_t newLength);
+	virtual BufferFragment getFragment(size_t pos);
 };
 
 }

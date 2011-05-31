@@ -13,7 +13,7 @@ protected:
 	virtual uint8_t destroy(uint32_t bufferId);
 
 public:
-	DefaultBufferManager(SharedBuffersCore* core);
+	DefaultBufferManager(const shb_CoreApi* core);
 
 	/**
 	 * Register the buffer or stream in the shared buffers library and transfer its

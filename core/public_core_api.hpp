@@ -3,6 +3,11 @@
 #include <stdint.h>
 #include <stddef.h>
 
+struct shb_BufferFragment {
+	uint8_t *start;
+	uint8_t *end;
+};
+
 struct shb_StreamInterface {
 	void (__stdcall *read)(void* impl, uint8_t* data, size_t size);
 	void (__stdcall *write)(void* impl, const uint8_t* data, size_t size);
@@ -16,6 +21,7 @@ struct shb_BufferInterface {
 	void (__stdcall *setReadPos)(void* impl, size_t pos);
 	void (__stdcall *setWritePos)(void* impl, size_t pos);
 	uint8_t (__stdcall *setLength)(void* impl, size_t length);
+	uint8_t (__stdcall *getFragment)(void *impl, shb_BufferFragment* outFragment, size_t startIndex);
 };
 
 struct shb_Stream {
@@ -30,14 +36,13 @@ struct shb_Buffer {
 };
 
 struct shb_CoreApi {
-	struct shb_Stream* (__stdcall *findStream)(uint32_t id);
-	struct shb_Buffer* (__stdcall *findBuffer)(uint32_t id);
-
 	uint32_t (__stdcall *shareStream)(
 			void* stream,
 			struct shb_StreamInterface* streamInterface,
 			void* destroyHandlerImpl,
 			uint8_t (__stdcall *destroyCallback)(void* impl, uint32_t bufferId));
+
+	struct shb_Stream* (__stdcall *findStream)(uint32_t id);
 
 	uint32_t (__stdcall *shareBuffer)(
 			void* buffer,
@@ -45,6 +50,8 @@ struct shb_CoreApi {
 			struct shb_BufferInterface* bufferInterface,
 			void* destroyHandlerImpl,
 			uint8_t (__stdcall *destroyCallback)(void* impl, uint32_t bufferId));
+
+	struct shb_Buffer* (__stdcall *findBuffer)(uint32_t id);
 
 	void (__stdcall *destroy)(uint32_t id);
 };

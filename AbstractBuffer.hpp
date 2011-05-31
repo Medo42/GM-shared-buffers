@@ -5,6 +5,21 @@
 
 namespace shb {
 
+class BufferFragment {
+	uint8_t * const start;
+	uint8_t * const end;
+
+public:
+	BufferFragment() : start(0), end(0) {}
+	BufferFragment(uint8_t *start, uint8_t *end) : start(start), end(end) {}
+	bool isValid() const { return start != 0; }
+	uint8_t* getStart() const { return start; }
+	uint8_t* getEnd() const { return end; }
+	size_t getLength() const {
+		return (end > start) ? end-start : 0;
+	}
+};
+
 class AbstractStream {
 public:
 	/**
@@ -51,7 +66,13 @@ public:
  * lenght=newLength, if this is possible. If newLength < length, all data with index of newLength and
  * greater is discarded. If newLength > length, the new memory available must be initialized to 0.
  * All data in the index range [0, min(length, newLength)-1] must be kept intact. If the resize is
- * successful, true is returned. Otherwise, false is returned and the buffer is not modified.
+ * successful, true is returned. Otherwise, false is returned and the contents of the buffer are not modified.
+ *
+ * getFragment(pos) returns two pointers (start and end) in a struct. If pos<length, start shall point
+ * to the buffer byte at index pos, and end shall point directly behind the last byte of the same memory block.
+ * More formally, for start<=ptr<end, ptr must point to the buffer byte at index pos+ptr-start.
+ * If pos>=length, both start and end shall be null pointers. The pointers returned must remain
+ * valid until a setter function or write() is called on the buffer.
  *
  * No operation performed on the buffer may cause unsafe behaviour like access to memory locations
  * outside the buffer, even if bad parameters are supplied.
@@ -65,6 +86,8 @@ public:
 
 	virtual size_t getLength() = 0;
 	virtual bool setLength(size_t length) = 0;
+
+	virtual BufferFragment getFragment(size_t pos) = 0;
 
 	/**
 	 * Default implementation. This is the expected behaviour for buffers,

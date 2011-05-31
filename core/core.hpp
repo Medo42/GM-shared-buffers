@@ -2,4 +2,4 @@
 
 #include "public_core_api.hpp"
 
-extern "C" __stdcall shb_CoreApi* shb_getCoreApi();
+extern "C" __stdcall shb_CoreApi* shb_getCoreApi(uint32_t version);

@@ -1,6 +1,5 @@
 #include "AbstractBufferManager.hpp"
 
-#include "SharedBuffersCore.hpp"
 #include "AbstractBuffer.hpp"
 #include "core/public_core_api.hpp"
 
@@ -43,6 +42,14 @@ static __stdcall uint8_t setLength(void* impl, size_t length) {
 	return static_cast<AbstractBuffer*>(static_cast<AbstractStream*>(impl))->setLength(length);
 }
 
+static __stdcall uint8_t getFragment(void* impl, shb_BufferFragment* fragment, size_t pos) {
+	AbstractBuffer* buffer = static_cast<AbstractBuffer*>(static_cast<AbstractStream*>(impl));
+	BufferFragment resultFragment = buffer->getFragment(pos);
+	fragment->start = resultFragment.getStart();
+	fragment->end = resultFragment.getEnd();
+	return resultFragment.isValid();
+}
+
 static shb_StreamInterface abstractStreamInterface = {
 	&read,
 	&write,
@@ -56,6 +63,7 @@ static shb_BufferInterface abstractBufferInterface = {
 	&setReadPos,
 	&setWritePos,
 	&setLength,
+	&getFragment
 };
 
 }
@@ -63,20 +71,20 @@ static shb_BufferInterface abstractBufferInterface = {
 namespace shb {
 using namespace shb_internal;
 
-__stdcall uint8_t AbstractBufferManager::destroyHandler(void* impl, uint32_t bufferId) {
-	return static_cast<AbstractBufferManager*>(impl)->destroyCallback(bufferId);
-}
+AbstractBufferManager::AbstractBufferManager(const shb_CoreApi* coreApi) : coreApi(coreApi) {}
+AbstractBufferManager::~AbstractBufferManager() {}
 
 uint32_t AbstractBufferManager::shareBuffer(AbstractBuffer* buffer) {
 	AbstractStream* stream = static_cast<AbstractStream*>(buffer);
-	return (*core->getCoreApi()->shareBuffer)(stream, &abstractStreamInterface, &abstractBufferInterface, this, &destroyHandler);
+	return (*coreApi->shareBuffer)(stream, &abstractStreamInterface, &abstractBufferInterface, this, &destroyHandler);
 }
 
 uint32_t AbstractBufferManager::shareStream(AbstractStream* stream) {
-	return (*core->getCoreApi()->shareStream)(stream, &abstractStreamInterface, this, &destroyHandler);
+	return (*coreApi->shareStream)(stream, &abstractStreamInterface, this, &destroyHandler);
 }
 
-AbstractBufferManager::AbstractBufferManager(SharedBuffersCore* core) : core(core) {}
-AbstractBufferManager::~AbstractBufferManager() {}
+__stdcall uint8_t AbstractBufferManager::destroyHandler(void* impl, uint32_t bufferId) {
+	return static_cast<AbstractBufferManager*>(impl)->destroyCallback(bufferId);
+}
 
 }

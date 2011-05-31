@@ -1,12 +1,12 @@
 #include "DefaultBufferManager.hpp"
 
 #include "AbstractBuffer.hpp"
-#include "SharedBuffersCore.hpp"
+#include "core/public_core_api.hpp"
 
 using namespace shb;
 
-DefaultBufferManager::DefaultBufferManager(SharedBuffersCore* core) :
-		AbstractBufferManager(core), destructableBuffers(), indestructableBuffers() {}
+DefaultBufferManager::DefaultBufferManager(const shb_CoreApi* coreApi) :
+		AbstractBufferManager(coreApi), destructableBuffers(), indestructableBuffers() {}
 
 uint8_t DefaultBufferManager::destroy(uint32_t bufferId) {
 	if(destructableBuffers.count(bufferId) != 0) {
@@ -43,5 +43,6 @@ void DefaultBufferManager::forceDestroy(uint32_t bufferId) {
 		// The buffer is not managed here, do nothing
 		return;
 	}
-	core->destroy(bufferId);
+
+	(*coreApi->destroy)(bufferId);
 }

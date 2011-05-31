@@ -97,15 +97,20 @@ static __stdcall void destroy(uint32_t id) {
 }
 
 static shb_CoreApi coreApi = {
-	&findStream,
-	&findBuffer,
-
 	&shareStream,
+	&findStream,
+
 	&shareBuffer,
+	&findBuffer,
 
 	&destroy
 };
 
-extern "C" __stdcall shb_CoreApi* shb_getCoreApi() {
-	return &coreApi;
+extern "C" __stdcall shb_CoreApi* shb_getCoreApi(uint32_t version) {
+	if(version == 0) {
+		return &coreApi;
+	} else {
+		// Someone wants a newer version interface than we can provide.
+		return 0;
+	}
 }

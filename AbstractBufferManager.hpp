@@ -2,11 +2,12 @@
 
 #include <stdint.h>
 
+struct shb_CoreApi;
+
 namespace shb {
 
 class AbstractBuffer;
 class AbstractStream;
-class SharedBuffersCore;
 
 /**
  * This is intended as the base class for all buffer-owning classes.
@@ -15,11 +16,12 @@ class SharedBuffersCore;
  * DefaultBufferManager does not suit your needs.
  */
 class AbstractBufferManager {
-private:
-	static __stdcall uint8_t destroyHandler(void* impl, uint32_t bufferId);
+public:
+	AbstractBufferManager(const shb_CoreApi* coreApi);
+	virtual ~AbstractBufferManager();
 
 protected:
-	SharedBuffersCore* core;
+	const shb_CoreApi* const coreApi;
 
 	/**
 	 * Register a buffer/stream with the shared buffers library. If someone tries
@@ -44,9 +46,8 @@ protected:
 	 */
 	virtual uint8_t destroyCallback(uint32_t bufferId) = 0;
 
-public:
-	AbstractBufferManager(SharedBuffersCore* core);
-	virtual ~AbstractBufferManager();
+private:
+	static __stdcall uint8_t destroyHandler(void* impl, uint32_t bufferId);
 };
 
 }
