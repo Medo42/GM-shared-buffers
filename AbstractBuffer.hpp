@@ -2,22 +2,32 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <algorithm>
+#include <cstring>
 
 namespace shb {
 
 class BufferFragment {
-	uint8_t * const start;
-	uint8_t * const end;
-
 public:
 	BufferFragment() : start(0), end(0) {}
-	BufferFragment(uint8_t *start, uint8_t *end) : start(start), end(end) {}
+	BufferFragment(uint8_t *start, uint8_t *end)
+		: start(start),
+		  end(start ? std::max(start, end) : (uint8_t*)0) {}
 	bool isValid() const { return start != 0; }
-	uint8_t* getStart() const { return start; }
-	uint8_t* getEnd() const { return end; }
+	uint8_t* getStart() { return start; }
+	uint8_t* getEnd() { return end; }
+
 	size_t getLength() const {
-		return (end > start) ? end-start : 0;
+		if(start) {
+			return end-start;
+		} else {
+			return 0;
+		}
 	}
+
+private:
+	uint8_t* start;
+	uint8_t* end;
 };
 
 class AbstractStream {
@@ -90,8 +100,45 @@ public:
 	virtual BufferFragment getFragment(size_t pos) = 0;
 
 	/**
-	 * Default implementation. This is the expected behaviour for buffers,
-	 * and you should not usually need to override it.
+	 * Default implementation using getFragment(), getReadPos()
+	 * and setReadPos(). Override if desired.
+	 */
+	virtual void read(uint8_t* data, size_t size) {
+		size_t pos = getReadPos();
+		BufferFragment fragment;
+		while(size > 0 && (fragment = getFragment(pos), fragment.isValid())) {
+			size_t copySize = std::min(size, fragment.getLength());
+			memmove(data, fragment.getStart(), copySize);
+			data += copySize;
+			pos += copySize;
+			size -= copySize;
+		}
+		setReadPos(pos);
+	}
+
+	/**
+	 * Default implementation using getFragment(), getWritePos(), setWritePos(),
+	 * getLength() and setLength().
+	 */
+	virtual void write(const uint8_t* data, size_t size) {
+		size_t pos = getWritePos();
+		if(pos+size > getLength()) {
+			// Attempt to resize, but if it doesn't work just copy what we can.
+			setLength(pos+size);
+		}
+		BufferFragment fragment;
+		while(size > 0 && (fragment = getFragment(pos), fragment.isValid())) {
+			size_t copySize = std::min(size, fragment.getLength());
+			memmove(fragment.getStart(), data, copySize);
+			data += copySize;
+			pos += copySize;
+			size -= copySize;
+		}
+		setWritePos(pos);
+	}
+
+	/**
+	 * Default implementation using getLength() and getReadPos()
 	 */
 	virtual size_t getBytesLeft() {
 		return getLength() - getReadPos();
