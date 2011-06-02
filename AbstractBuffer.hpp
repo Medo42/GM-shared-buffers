@@ -3,6 +3,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <algorithm>
+#include <limits>
 #include <cstring>
 
 namespace shb {
@@ -21,6 +22,8 @@ public:
 	bool isValid() const { return start != 0; }
 	uint8_t* getStart() { return start; }
 	uint8_t* getEnd() { return end; }
+	const uint8_t* getStart() const { return start; }
+	const uint8_t* getEnd() const { return end; }
 
 	size_t getLength() const {
 		if(start) {
@@ -35,16 +38,35 @@ class AbstractStream {
 public:
 	/**
 	 * Read size bytes into the provided data buffer. Where the data comes from is
-	 * completely up to the implementation. If less data is available, the behavior
-	 * is undefined.
+	 * completely up to the implementation. If less data is available, as much as is
+	 * available will be copied to the beginning of the buffer.
+	 *
+	 * The actual number of bytes read is returned.
 	 */
-	virtual void read(uint8_t* data, size_t size) = 0;
+	virtual size_t read(uint8_t* data, size_t size) = 0;
+
+	/**
+	 * peek behaves like read, except that the data is not removed from the stream.
+	 * That is, subsequent calls to read must return the same data that is returned
+	 * by the peek operation.
+	 */
+	virtual size_t peek(uint8_t* data, size_t size) = 0;
+
+	/**
+	 * skip behaves like read, except that the data is removed from the stream without
+	 * being copied. The actual number of bytes skipped is returned.
+	 */
+	virtual size_t skip(size_t size) = 0;
 
 	/**
 	 * Write size bytes from the provided data buffer. Where the data is written to
-	 * is completely up to the implementation.
+	 * is completely up to the implementation. If less than size bytes can be written,
+	 * as much data as possible is written instead. Implementations should clearly
+	 * document if and when this can happen.
+	 *
+	 * The actual number of bytes written is returned.
 	 */
-	virtual void write(const uint8_t* data, size_t size) = 0;
+	virtual size_t write(const uint8_t* data, size_t size) = 0;
 
 	/**
 	 * Return the number of bytes that can be read at the moment.
@@ -64,11 +86,13 @@ public:
  * readPos and writePos are numbers in the range [0, length].
  *
  * read(data, size) will copy size bytes starting from the one indexed by readPos into the data
- * array and increase readPos by size, if size <= length-readPos. Otherwise the behaviour is undefined.
+ * array, if size <= length-readPos. Otherwise as many bytes as possible are copied. readPos is incremented
+ * by the number of bytes actually read, and that number is returned.
  *
  * write(data, size) will copy size bytes from the data array into the buffer, starting at the index
- * writePos, and increase writePos by size, if size <= length-writePos or the buffer can be resized
- * to the required length. Otherwise the behaviour is undefined.
+ * writePos, if size <= length-writePos or the buffer can be resized to the required length. Otherwise
+ * as many bytes as possible are copied. writePos is incremented by the number of bytes actually written,
+ * and that number is returned.
  *
  * getReadPos, getWritePos, setReadPos and setWritePos return or modify the current value of readPos
  * and writePos. Attempting to set either to a value greater than length shall set it to length instead.
@@ -78,15 +102,13 @@ public:
  * greater is discarded. If newLength > length, the new memory available must be initialized to 0.
  * All data in the index range [0, min(length, newLength)-1] must be kept intact. If the resize is
  * successful, true is returned. Otherwise, false is returned and the contents of the buffer are not modified.
+ * In that case, the new length of the buffer may be anything between the old size and the requested size.
  *
  * getFragment(pos) returns two pointers (start and end) in a struct. If pos<length, start shall point
  * to the buffer byte at index pos, and end shall point directly behind the last byte of the same memory block.
  * More formally, for start<=ptr<end, ptr must point to the buffer byte at index pos+ptr-start.
  * If pos>=length, both start and end shall be null pointers. The pointers returned must remain
  * valid until a setter function or write() is called on the buffer.
- *
- * No operation performed on the buffer may cause unsafe behaviour like access to memory locations
- * outside the buffer, even if bad parameters are supplied.
  */
 class AbstractBuffer : public AbstractStream {
 public:
@@ -101,45 +123,66 @@ public:
 	virtual BufferFragment getFragment(size_t pos) = 0;
 
 	/**
-	 * Default implementation using getFragment(), getReadPos()
-	 * and setReadPos(). Override if desired.
+	 * Default implementation using getFragment(), getReadPos() and setReadPos().
 	 */
-	virtual void read(uint8_t* data, size_t size) {
-		size_t pos = getReadPos();
+	virtual size_t read(uint8_t* data, size_t size) {
+		size_t dataPos = 0;
+		size_t readPos = getReadPos();
 		BufferFragment fragment;
-		while(size > 0 && (fragment = getFragment(pos), fragment.isValid())) {
-			size_t copySize = std::min(size, fragment.getLength());
-			memmove(data, fragment.getStart(), copySize);
-			data += copySize;
-			pos += copySize;
-			size -= copySize;
+		while(dataPos < size && (fragment = getFragment(readPos), fragment.isValid())) {
+			size_t copySize = std::min(size-dataPos, fragment.getLength());
+			memmove(data+dataPos, fragment.getStart(), copySize);
+			dataPos += copySize;
+			readPos += copySize;
 		}
-		setReadPos(pos);
+		setReadPos(readPos);
+		return dataPos;
+	}
+
+	/**
+	 * Default implementation using read(), getReadPos() and setReadPos().
+	 */
+	virtual size_t peek(uint8_t* data, size_t size) {
+		size_t oldReadPos = getReadPos();
+		size_t copied = read(data, size);
+		setReadPos(oldReadPos);
+		return copied;
+	}
+
+	/**
+	 * Default implementation using getReadPos() and setReadPos().
+	 */
+	virtual size_t skip(size_t size) {
+		size_t oldReadPos = getReadPos();
+		setReadPos(oldReadPos+size);
+		return getReadPos()-oldReadPos;
 	}
 
 	/**
 	 * Default implementation using getFragment(), getWritePos(), setWritePos(),
 	 * getLength() and setLength().
 	 */
-	virtual void write(const uint8_t* data, size_t size) {
-		size_t pos = getWritePos();
-		if(pos+size > getLength()) {
+	virtual size_t write(const uint8_t* data, size_t size) {
+		size_t dataPos = 0;
+		size_t writePos = getWritePos();
+		if(size > getLength()-writePos && size <= std::numeric_limits<size_t>::max() - writePos) {
 			// Attempt to resize, but if it doesn't work just copy what we can.
-			setLength(pos+size);
+			setLength(writePos+size);
 		}
+
 		BufferFragment fragment;
-		while(size > 0 && (fragment = getFragment(pos), fragment.isValid())) {
-			size_t copySize = std::min(size, fragment.getLength());
+		while(dataPos < size && (fragment = getFragment(writePos), fragment.isValid())) {
+			size_t copySize = std::min(size-dataPos, fragment.getLength());
 			memmove(fragment.getStart(), data, copySize);
-			data += copySize;
-			pos += copySize;
-			size -= copySize;
+			dataPos += copySize;
+			writePos += copySize;
 		}
-		setWritePos(pos);
+		setWritePos(writePos);
+		return dataPos;
 	}
 
 	/**
-	 * Default implementation using getLength() and getReadPos()
+	 * Default implementation using getLength() and getReadPos().
 	 */
 	virtual size_t getBytesLeft() {
 		return getLength() - getReadPos();

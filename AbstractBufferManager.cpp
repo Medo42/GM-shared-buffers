@@ -6,11 +6,19 @@
 namespace shb_internal {
 using namespace shb;
 
-static __stdcall void read(void* impl, uint8_t* data, size_t size) {
+static __stdcall size_t read(void* impl, uint8_t* data, size_t size) {
 	return static_cast<AbstractStream*>(impl)->read(data, size);
 }
 
-static __stdcall void write(void* impl, const uint8_t* data, size_t size) {
+static __stdcall size_t peek(void* impl, uint8_t* data, size_t size) {
+	return static_cast<AbstractStream*>(impl)->peek(data, size);
+}
+
+static __stdcall size_t skip(void* impl, size_t size) {
+	return static_cast<AbstractStream*>(impl)->skip(size);
+}
+
+static __stdcall size_t write(void* impl, const uint8_t* data, size_t size) {
 	return static_cast<AbstractStream*>(impl)->write(data, size);
 }
 
@@ -42,16 +50,17 @@ static __stdcall uint8_t setLength(void* impl, size_t length) {
 	return static_cast<AbstractBuffer*>(static_cast<AbstractStream*>(impl))->setLength(length);
 }
 
-static __stdcall uint8_t getFragment(void* impl, shb_BufferFragment* fragment, size_t pos) {
+static __stdcall void getFragment(void* impl, shb_BufferFragment* fragment, size_t pos) {
 	AbstractBuffer* buffer = static_cast<AbstractBuffer*>(static_cast<AbstractStream*>(impl));
 	BufferFragment resultFragment = buffer->getFragment(pos);
 	fragment->start = resultFragment.getStart();
 	fragment->end = resultFragment.getEnd();
-	return resultFragment.isValid();
 }
 
 static shb_StreamInterface abstractStreamInterface = {
 	&read,
+	&peek,
+	&skip,
 	&write,
 	&getBytesLeft
 };

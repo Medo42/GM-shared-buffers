@@ -26,12 +26,10 @@ static inline BufferProxy getBuffer(double id) {
 static inline void preallocateBufferSpace(double id, size_t bytes) {
 	BufferProxy buffer = getBuffer(id);
 	size_t writePos = buffer.getWritePos();
-	if(buffer.bufferExists() && bytes > buffer.getLength()-writePos) {
+	if(buffer.bufferExists() && bytes > buffer.getLength() - writePos) {
 		// Beware the size_t overflow :P
 		if(bytes <= std::numeric_limits<size_t>::max() - writePos) {
 			buffer.setLength(writePos + bytes);
-		} else {
-			throw std::bad_alloc();
 		}
 	}
 }
@@ -44,10 +42,9 @@ static inline X stream_read_x(double id) {
 }
 
 template<typename X>
-static inline double stream_write_x(double id, double value) {
+static inline size_t stream_write_x(double id, double value) {
 	X convertedValue = gm_double_to_X<X>(value);
-	getStream(id).write(reinterpret_cast<uint8_t*>(&convertedValue), sizeof(convertedValue));
-	return 0;
+	return getStream(id).write(reinterpret_cast<uint8_t*>(&convertedValue), sizeof(convertedValue));
 }
 
 gmexport double stream_exists(double id) {
@@ -120,36 +117,52 @@ gmexport double stream_write_float64(double id, double value) {
 
 gmexport const char* stream_read_string(double id) {
 	gm_returnstring.clear();
-	// TODO
-	return 0;
+	StreamProxy stream = getStream(id);
+	size_t returnStringPos = 0;
+
+	while(stream.getBytesLeft() > 0) {
+		size_t scanSize = std::min((size_t)256, stream.getBytesLeft());
+		gm_returnstring.resize(returnStringPos + scanSize);
+		uint8_t* scanStart = reinterpret_cast<uint8_t*>(&(gm_returnstring[returnStringPos]));
+		stream.peek(scanStart, scanSize);
+
+		uint8_t* endPtr = static_cast<uint8_t*>(memchr(scanStart, 0, scanSize));
+		if(endPtr != 0) {
+			stream.skip(endPtr-scanStart + 1); // remove everything including the delimiter
+			return &(gm_returnstring.front()); // The 0-delimiter is already there, no need to add one :)
+		} else {
+			stream.skip(scanSize);
+			returnStringPos += scanSize;
+		}
+	}
+
+	// We found no delimiter, just add a 0-byte and return the whole thing.
+	gm_returnstring.push_back(0);
+	return &(gm_returnstring.front());
 }
 
 gmexport double stream_write_string(double id, const char* string) {
-	getStream(id).write(reinterpret_cast<const uint8_t*>(string), strlen(string) + 1);
-	return 1;
+	return getStream(id).write(reinterpret_cast<const uint8_t*>(string), strlen(string) + 1);
 }
 
 gmexport const char* stream_read_data(double id, double bytes) {
-	size_t size = gm_double_to_X<size_t>(bytes);
 	StreamProxy stream = getStream(id);
-	if(stream.getBytesLeft() < size) {
-		return "";
-	} else {
-		char* returnstring = gm_make_return_string(size);
-		stream.read(reinterpret_cast<uint8_t*>(returnstring), size);
-		return returnstring;
-	}
+	size_t size = std::min(gm_double_to_X<size_t>(bytes), stream.getBytesLeft());
+	char* returnstring = gm_make_return_string(size);
+	stream.read(reinterpret_cast<uint8_t*>(returnstring), size);
+	return returnstring;
 }
 
 gmexport double stream_write_data(double id, const char* string) {
-	getStream(id).write(reinterpret_cast<const uint8_t*>(string), strlen(string));
-	return 1;
+	return getStream(id).write(reinterpret_cast<const uint8_t*>(string), strlen(string));
 }
 
 gmexport const char* stream_read_hex(double id, double bytes) {
-	size_t size = gm_double_to_X<size_t>(bytes);
 	StreamProxy stream = getStream(id);
-	if(size > size*2 || stream.getBytesLeft() < size) {
+	size_t size = std::min(gm_double_to_X<size_t>(bytes), stream.getBytesLeft());
+
+	if(size > size*2) {
+		// There is nothing sensible we can do if size*2 does not fit in size_t.
 		return "";
 	}
 
@@ -171,67 +184,27 @@ gmexport const char* stream_read_hex(double id, double bytes) {
 
 gmexport double stream_write_hex(double id, const char* string) {
 	size_t size = strlen(string) / 2;
-	preallocateBufferSpace(id, size);
-	StreamProxy stream = getStream(id);
 
+	gm_returnstring.resize(size);
 	for(size_t i = 0; i < size; ++i) {
 		uint8_t a = string[2 * i];
 		uint8_t b = string[2 * i + 1];
-		uint8_t c =
+		*(reinterpret_cast<uint8_t*>(&(gm_returnstring[i]))) =
 			((('0' <= a && a <= '9')? a - '0' : (('a' <= a && a <= 'f')? 10 + a - 'a' : (('A' <= a && a <= 'F')? 10 + a - 'A' : 0))) << 4) |
 			(('0' <= b && b <= '9')? b - '0' : (('a' <= b && b <= 'f')? 10 + b - 'a' : (('A' <= b && b <= 'F')? 10 + b - 'A' : 0)));
-		stream.write(&c, 1);
 	}
-	return 1;
+	return getStream(id).write(reinterpret_cast<uint8_t*>(&(gm_returnstring.front())), size);
 }
 
 gmexport double stream_write_stream_part(double id, double source_id, double bytes) {
-	StreamProxy sourceStream = getStream(source_id);
 	StreamProxy destStream = getStream(id);
+	StreamProxy sourceStream = getStream(source_id);
 	BufferProxy sourceBuffer = getBuffer(source_id);
-	BufferProxy destBuffer = getBuffer(id);
 
-	size_t size = gm_double_to_X<size_t>(bytes);
-
-	if(size > sourceStream.getBytesLeft() || !sourceStream.streamExists() || !destStream.streamExists()) {
-		return 0;
-	}
-
-	preallocateBufferSpace(id, size);
 	if(sourceBuffer.bufferExists()) {
-		size_t readPos = sourceBuffer.getReadPos();
-		BufferFragment fragment;
-		while(size > 0 && (fragment = sourceBuffer.getFragment(readPos), fragment.isValid())) {
-			size_t copySize = std::min(size, fragment.getLength());
-			destStream.write(fragment.getStart(), copySize);
-			readPos += copySize;
-			size -= copySize;
-		}
-		sourceBuffer.setReadPos(readPos);
-		return 1;
-	} else if(destBuffer.bufferExists()) {
-		size_t writePos = destBuffer.getWritePos();
-		// Normally we would try to allocate space here, but this was already done above
-		// by preallocateBufferSpace.
-		BufferFragment fragment;
-		while(size > 0 && (fragment = destBuffer.getFragment(writePos), fragment.isValid())) {
-			size_t copySize = std::min(size, fragment.getLength());
-			sourceStream.read(fragment.getStart(), copySize);
-			writePos += copySize;
-			size -= copySize;
-		}
-		destBuffer.setWritePos(writePos);
-		return 1;
+		return destStream.writeStream(sourceBuffer, bytes);
 	} else {
-		// Copy in small blocks as a tradeoff between speed and memory use.
-		uint8_t tempBuffer[256];
-		while(size > 0) {
-			size_t copySize = std::min(size, (size_t)256);
-			sourceStream.read(tempBuffer, copySize);
-			destStream.write(tempBuffer, copySize);
-			size -= copySize;
-		}
-		return 1;
+		return destStream.writeStream(sourceStream, bytes);
 	}
 }
 

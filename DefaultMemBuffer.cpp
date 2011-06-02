@@ -16,23 +16,25 @@ DefaultMemBuffer::DefaultMemBuffer() : data(0), readPos(0), writePos(0), capacit
  * provided array is not changed. The number of bytes
  * actually read is returned.
  */
-void DefaultMemBuffer::read(uint8_t* out, size_t size) {
+size_t DefaultMemBuffer::read(uint8_t* out, size_t size) {
 	size = std::min(size, getBytesLeft());
 	memmove(out, data+readPos, size);
 	readPos += size;
+	return size;
 }
 
 /**
  * Write array to the buffer, starting at writePos.
  * The buffer is enlarged if required.
  */
-void DefaultMemBuffer::write(const uint8_t *in, size_t size) {
-	size_t newWritePos = writePos+size;
-	if(newWritePos > length) {
-		setLength(newWritePos);
+size_t DefaultMemBuffer::write(const uint8_t *in, size_t size) {
+	if(size > length-writePos && size <= std::numeric_limits<size_t>::max() - writePos) {
+		setLength(writePos+size);
 	}
+	size = std::min(size, length-writePos);
 	memmove(data+writePos, in, size);
-	writePos = newWritePos;
+	writePos += size;
+	return size;
 }
 
 size_t DefaultMemBuffer::getReadPos() {
@@ -70,7 +72,8 @@ bool DefaultMemBuffer::setLength(size_t newLength) {
 	if(newCapacity != capacity) {
 		void *temp = realloc(data, newCapacity);
 		if(temp==NULL) {
-			throw std::bad_alloc();
+			// Out of memory, Capt'n
+			return false;
 		}
 		data = static_cast<uint8_t*>(temp);
 	}

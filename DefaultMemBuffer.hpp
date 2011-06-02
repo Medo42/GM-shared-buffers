@@ -8,8 +8,8 @@ class DefaultMemBuffer : public AbstractBuffer {
 public:
 	DefaultMemBuffer();
 
-	virtual void read(uint8_t* out, size_t size);
-	virtual void write(const uint8_t *in, size_t size);
+	virtual size_t read(uint8_t* out, size_t size);
+	virtual size_t write(const uint8_t *in, size_t size);
 
 	virtual size_t getReadPos();
 	virtual size_t getWritePos();
