@@ -1,6 +1,8 @@
 #include "gm.h"
 #include "../BufferProxy.hpp"
 
+#include <cstring>
+
 extern shb_CoreApi* shbApi;
 using namespace shb;
 
@@ -14,24 +16,6 @@ static inline StreamProxy getStream(double id) {
 
 static inline BufferProxy getBuffer(double id) {
 	return BufferProxy(shbApi, toHandle(id));
-}
-
-/**
- * If id is a buffer handle, and the buffer is not large enough to write
- * bytes bytes without resizing, this function tries to resize the buffer
- * in advance so that there will only be one reallocation.
- *
- * This only really makes sense for potentially large write operations.
- */
-static inline void preallocateBufferSpace(double id, size_t bytes) {
-	BufferProxy buffer = getBuffer(id);
-	size_t writePos = buffer.getWritePos();
-	if(buffer.bufferExists() && bytes > buffer.getLength() - writePos) {
-		// Beware the size_t overflow :P
-		if(bytes <= std::numeric_limits<size_t>::max() - writePos) {
-			buffer.setLength(writePos + bytes);
-		}
-	}
 }
 
 template<typename X>
@@ -198,13 +182,20 @@ gmexport double stream_write_hex(double id, const char* string) {
 
 gmexport double stream_write_stream_part(double id, double source_id, double bytes) {
 	StreamProxy destStream = getStream(id);
+	BufferProxy destBuffer = getBuffer(id);
 	StreamProxy sourceStream = getStream(source_id);
 	BufferProxy sourceBuffer = getBuffer(source_id);
 
+	/*
+	 * Try to call copyStream with a buffer as one argument, so that an optimized copy routine
+	 * can be used.
+	 */
 	if(sourceBuffer.bufferExists()) {
-		return destStream.writeStream(sourceBuffer, bytes);
+		return shb::copyStream(destStream, sourceBuffer, bytes);
+	} else if(destBuffer.bufferExists()) {
+		return shb::copyStream(destBuffer, sourceStream, bytes);
 	} else {
-		return destStream.writeStream(sourceStream, bytes);
+		return shb::copyStream(destStream, sourceStream, bytes);
 	}
 }
 

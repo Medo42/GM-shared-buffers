@@ -3,8 +3,6 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <algorithm>
-#include <limits>
-#include <cstring>
 
 namespace shb {
 
@@ -125,70 +123,59 @@ public:
 	/**
 	 * Default implementation using getFragment(), getReadPos() and setReadPos().
 	 */
-	virtual size_t read(uint8_t* data, size_t size) {
-		size_t dataPos = 0;
-		size_t readPos = getReadPos();
-		BufferFragment fragment;
-		while(dataPos < size && (fragment = getFragment(readPos), fragment.isValid())) {
-			size_t copySize = std::min(size-dataPos, fragment.getLength());
-			memmove(data+dataPos, fragment.getStart(), copySize);
-			dataPos += copySize;
-			readPos += copySize;
-		}
-		setReadPos(readPos);
-		return dataPos;
-	}
+	virtual size_t read(uint8_t* data, size_t size);
 
 	/**
 	 * Default implementation using read(), getReadPos() and setReadPos().
 	 */
-	virtual size_t peek(uint8_t* data, size_t size) {
-		size_t oldReadPos = getReadPos();
-		size_t copied = read(data, size);
-		setReadPos(oldReadPos);
-		return copied;
-	}
+	virtual size_t peek(uint8_t* data, size_t size);
 
 	/**
 	 * Default implementation using getReadPos() and setReadPos().
 	 */
-	virtual size_t skip(size_t size) {
-		size_t oldReadPos = getReadPos();
-		setReadPos(oldReadPos+size);
-		return getReadPos()-oldReadPos;
-	}
+	virtual size_t skip(size_t size);
 
 	/**
 	 * Default implementation using getFragment(), getWritePos(), setWritePos(),
 	 * getLength() and setLength().
 	 */
-	virtual size_t write(const uint8_t* data, size_t size) {
-		size_t dataPos = 0;
-		size_t writePos = getWritePos();
-		if(size > getLength()-writePos && size <= std::numeric_limits<size_t>::max() - writePos) {
-			// Attempt to resize, but if it doesn't work just copy what we can.
-			setLength(writePos+size);
-		}
-
-		BufferFragment fragment;
-		while(dataPos < size && (fragment = getFragment(writePos), fragment.isValid())) {
-			size_t copySize = std::min(size-dataPos, fragment.getLength());
-			memmove(fragment.getStart(), data, copySize);
-			dataPos += copySize;
-			writePos += copySize;
-		}
-		setWritePos(writePos);
-		return dataPos;
-	}
+	virtual size_t write(const uint8_t* data, size_t size);
 
 	/**
 	 * Default implementation using getLength() and getReadPos().
 	 */
-	virtual size_t getBytesLeft() {
-		return getLength() - getReadPos();
-	}
+	virtual size_t getBytesLeft();
 
 	virtual ~AbstractBuffer() {}
 };
+
+/**
+ * Read size bytes from the source stream or buffer and write them to the destination
+ * stream or buffer.
+ *
+ * If fewer bytes are available to be read from source or if not everything can be written,
+ * as much as possible is written. It will always be attempted to read size bytes from the
+ * source stream, or the ammount returned by source.getBytesLeft() (whichever is smaller),
+ * even if fewer bytes can be written.
+ *
+ * The actual number of bytes written is returned.
+ *
+ * Based on the runtime type of the arguments, an optimized copy routine is selected.
+ * An actual stream to stream copy reads data into a temporary array first and then writes
+ * it to the destination, so all data is copied twice. If dest or source is a buffer,
+ * its internal memory can be accessed directly, so only one copy is needed.
+ */
+size_t copyStream(AbstractStream& dest, AbstractStream& source, size_t size);
+
+/**
+ * Read size bytes starting on position sourceStartPos in the source buffer and
+ * write them to the dest stream or buffer.
+ *
+ * The read position of the source buffer will be preserved. If fewer bytes are available
+ * to be read or if not everything can be written, as much as possible is written.
+ *
+ * The actual number of bytes written is returned.
+ */
+size_t copyBuffer(AbstractStream& dest, AbstractBuffer& source, size_t sourceStartPos, size_t size);
 
 }

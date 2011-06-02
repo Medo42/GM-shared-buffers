@@ -61,49 +61,6 @@ size_t StreamProxy::getBytesLeft() {
 	}
 }
 
-size_t StreamProxy::writeStream(AbstractStream& source, size_t size) {
-	AbstractBuffer* sourceAsBuffer = dynamic_cast<AbstractBuffer*>(&source);
-	if(sourceAsBuffer) {
-		// If the source is actually a buffer, use the buffer copying routine for greater efficiency.
-		size_t written = writeBuffer(*sourceAsBuffer, sourceAsBuffer->getReadPos(), size);
-		sourceAsBuffer->skip(size);
-		return written;
-	} else if((*coreApi->findBuffer)(handle)) {
-		// If I am actually a buffer, use the buffer's stream copying routine for greater efficiency.
-		return BufferProxy(coreApi, handle).writeStream(source, size);
-	} else {
-		// Actual Stream->Stream copy
-		size = std::min(size, source.getBytesLeft());
-		uint8_t tempBuffer[256];
-		size_t copied = 0;
-		while(copied < size) {
-			size_t copySize = std::min(size-copied, (size_t)256);
-			source.read(tempBuffer, copySize);
-			size_t actuallyWritten = write(tempBuffer, copySize);
-			if(actuallyWritten != copySize) {
-				source.skip(size-copied-copySize);
-				return copied+actuallyWritten;
-			}
-			copied += actuallyWritten;
-		}
-		return copied;
-	}
-}
-
-size_t StreamProxy::writeBuffer(AbstractBuffer& source, size_t startPos, size_t size) {
-	size_t copied = 0;
-	BufferFragment fragment;
-	while(copied < size && (fragment = source.getFragment(startPos+copied), fragment.isValid())) {
-		size_t copySize = std::min(size - copied, fragment.getLength());
-		size_t actuallyWritten = write(fragment.getStart(), copySize);
-		if(actuallyWritten != copySize) {
-			return copied+actuallyWritten;
-		}
-		copied += actuallyWritten;
-	}
-	return copied;
-}
-
 BufferProxy::BufferProxy(const shb_CoreApi* coreApi, uint32_t handle):
 		coreApi(coreApi), handle(handle) {}
 
@@ -221,50 +178,6 @@ BufferFragment BufferProxy::getFragment(size_t pos) {
 	} else {
 		return BufferFragment();
 	}
-}
-
-/**
- * Read size bytes from the given stream and write them to this buffer.
- * If fewer bytes are available to be read or if not everything can be written,
- * as much as possible is written. It will always be attempted to read size bytes
- * from the source stream, even if fewer bytes can be written.
- *
- * The actual number of bytes written is returned.
- */
-size_t BufferProxy::writeStream(AbstractStream& source, size_t size) {
-	size = std::min(size, source.getBytesLeft());
-	size_t writePos = getWritePos();
-	size_t copied = 0;
-
-	if(size > getLength()-writePos && size <= std::numeric_limits<size_t>::max() - writePos) {
-		setLength(writePos+size);
-	}
-
-	BufferFragment fragment;
-	while(copied < size && (fragment = getFragment(writePos), fragment.isValid())) {
-		size_t copySize = std::min(size - copied, fragment.getLength());
-		source.read(fragment.getStart(), copySize);
-		copied += copySize;
-		writePos += copySize;
-	}
-	setWritePos(writePos);
-	return copied;
-}
-
-/**
- * Read size bytes starting on position startPos in the given buffer and
- * write them to this one. The read position of the source buffer is not modified.
- * If fewer bytes are available to be read or if not everything can be written,
- * as much as possible is written.
- *
- * The actual number of bytes written is returned.
- */
-size_t BufferProxy::writeBuffer(AbstractBuffer& source, size_t startPos, size_t size) {
-	size_t oldReadPos = source.getReadPos();
-	source.setReadPos(startPos);
-	size_t written = writeStream(source, size);
-	source.setReadPos(oldReadPos);
-	return written;
 }
 
 }

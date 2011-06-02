@@ -1,6 +1,7 @@
 #include "DefaultMemBuffer.hpp"
 
 #include <algorithm>
+#include <limits>
 #include <cstring>
 
 using namespace shb;
