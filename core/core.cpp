@@ -106,11 +106,6 @@ static shb_CoreApi coreApi = {
 	&destroy
 };
 
-extern "C" __stdcall shb_CoreApi* shb_getCoreApi(uint32_t version) {
-	if(version == 0) {
-		return &coreApi;
-	} else {
-		// Someone wants a newer version interface than we can provide.
-		return 0;
-	}
+extern "C" __stdcall shb_CoreApi* shb_getCoreApiV1() {
+	return &coreApi;
 }

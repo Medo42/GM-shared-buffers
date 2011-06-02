@@ -8,7 +8,7 @@ using namespace shb;
 DefaultBufferManager::DefaultBufferManager(const shb_CoreApi* coreApi) :
 		AbstractBufferManager(coreApi), destructableBuffers(), indestructableBuffers() {}
 
-uint8_t DefaultBufferManager::destroy(uint32_t bufferId) {
+uint8_t DefaultBufferManager::destroyCallback(uint32_t bufferId) {
 	if(destructableBuffers.count(bufferId) != 0) {
 		delete destructableBuffers[bufferId];
 		destructableBuffers.erase(bufferId);

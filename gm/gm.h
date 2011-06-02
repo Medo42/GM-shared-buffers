@@ -1,11 +1,15 @@
 #pragma once
 
+#include "../BufferProxy.hpp"
+
 #include <math.h>
 #include <limits>
 #include <vector>
 #include <new>
 
 #define gmexport extern "C" __declspec (dllexport)
+
+extern shb_CoreApi* shbCoreApi;
 
 extern std::vector<char> gm_returnstring;
 static inline char* gm_make_return_string(size_t length) {
@@ -53,3 +57,14 @@ inline bool gm_double_to_X(double value) {
 	return (value>=0.5);
 }
 
+static inline uint32_t toHandle(double id) {
+	return gm_double_to_X<uint32_t>(id);
+}
+
+static inline shb::StreamProxy getStream(double id) {
+	return shb::StreamProxy(shbCoreApi, toHandle(id));
+}
+
+static inline shb::BufferProxy getBuffer(double id) {
+	return shb::BufferProxy(shbCoreApi, toHandle(id));
+}

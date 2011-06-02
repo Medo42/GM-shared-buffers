@@ -1,22 +1,8 @@
 #include "gm.h"
-#include "../BufferProxy.hpp"
 
 #include <cstring>
 
-extern shb_CoreApi* shbApi;
 using namespace shb;
-
-static inline uint32_t toHandle(double id) {
-	return gm_double_to_X<uint32_t>(id);
-}
-
-static inline StreamProxy getStream(double id) {
-	return StreamProxy(shbApi, toHandle(id));
-}
-
-static inline BufferProxy getBuffer(double id) {
-	return BufferProxy(shbApi, toHandle(id));
-}
 
 template<typename X>
 static inline X stream_read_x(double id) {
@@ -207,3 +193,7 @@ gmexport double stream_get_bytes_left(double id) {
 	return getStream(id).getBytesLeft();
 }
 
+gmexport double stream_destroy(double id) {
+	getStream(id).destroy();
+	return 0;
+}

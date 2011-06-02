@@ -104,7 +104,8 @@ public:
  *
  * getFragment(pos) returns two pointers (start and end) in a struct. If pos<length, start shall point
  * to the buffer byte at index pos, and end shall point directly behind the last byte of the same memory block.
- * More formally, for start<=ptr<end, ptr must point to the buffer byte at index pos+ptr-start.
+ * More formally, for start<=ptr<end, ptr must point to the buffer byte at index pos+ptr-start. The last
+ * fragment must not include any bytes after the last valid buffer byte.
  * If pos>=length, both start and end shall be null pointers. The pointers returned must remain
  * valid until a setter function or write() is called on the buffer.
  */

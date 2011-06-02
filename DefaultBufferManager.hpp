@@ -34,7 +34,7 @@ public:
 	void forceDestroy(uint32_t bufferId);
 
 protected:
-	virtual uint8_t destroy(uint32_t bufferId);
+	virtual uint8_t destroyCallback(uint32_t bufferId);
 
 private:
 	// Copying this class does not make sense, so we forbid it.
