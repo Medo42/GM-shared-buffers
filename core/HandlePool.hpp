@@ -15,6 +15,10 @@ namespace shb_internal {
  */
 class HandlePool {
 private:
+	// Prevent accidental copying, which would not make sense for this class
+	HandlePool(const HandlePool&);
+	HandlePool& operator=(const HandlePool&);
+
 	std::set<uint32_t> usedHandles;
 	uint32_t nextHandle;
 

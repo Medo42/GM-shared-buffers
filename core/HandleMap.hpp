@@ -18,6 +18,10 @@ namespace shb_internal {
 template<typename Handled>
 class HandleMap {
 private:
+	// Prevent accidental copying, which would not make sense for this class
+	HandleMap(const HandleMap&);
+	HandleMap& operator=(const HandleMap&);
+
 	typedef std::map<uint32_t, Handled> map_type;
 	typedef typename map_type::iterator map_iter;
 
@@ -25,7 +29,7 @@ private:
 	map_type content;
 
 public:
-	HandleMap(HandlePool& pool) : handlePool(&pool), content() {};
+	explicit HandleMap(HandlePool& pool) : handlePool(&pool), content() {};
 	~HandleMap() {
 		map_iter iter = content.begin();
 		for(;iter != content.end(); ++iter) {

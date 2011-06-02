@@ -8,6 +8,10 @@ struct shb_BufferFragment {
 	uint8_t *end;
 };
 
+/*
+ * TODO: Add delimited reading or peeking? Otherwise, reading a delimited string
+ * requires a read call for every single byte
+ */
 struct shb_StreamInterface {
 	void (__stdcall *read)(void* impl, uint8_t* data, size_t size);
 	void (__stdcall *write)(void* impl, const uint8_t* data, size_t size);

@@ -5,15 +5,6 @@
 namespace shb {
 
 class DefaultMemBuffer : public AbstractBuffer {
-	static const size_t MIN_CAPACITY = 16;
-	uint8_t* data;
-
-	size_t readPos;
-	size_t writePos;
-
-	size_t capacity;
-	size_t length;
-
 public:
 	DefaultMemBuffer();
 
@@ -27,6 +18,20 @@ public:
 	virtual void setWritePos(size_t pos);
 	virtual bool setLength(size_t newLength);
 	virtual BufferFragment getFragment(size_t pos);
+
+private:
+	// Default copying would cause Bad Things(tm) to happen, so we forbid it.
+	DefaultMemBuffer(const DefaultMemBuffer&);
+	DefaultMemBuffer& operator=(const DefaultMemBuffer&);
+
+	static const size_t MIN_CAPACITY = 16;
+	uint8_t* data;
+
+	size_t readPos;
+	size_t writePos;
+
+	size_t capacity;
+	size_t length;
 };
 
 }

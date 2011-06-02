@@ -8,11 +8,16 @@
 namespace shb {
 
 class BufferFragment {
+private:
+	uint8_t* start;
+	uint8_t* end;
+
 public:
 	BufferFragment() : start(0), end(0) {}
 	BufferFragment(uint8_t *start, uint8_t *end)
 		: start(start),
 		  end(start ? std::max(start, end) : (uint8_t*)0) {}
+
 	bool isValid() const { return start != 0; }
 	uint8_t* getStart() { return start; }
 	uint8_t* getEnd() { return end; }
@@ -24,10 +29,6 @@ public:
 			return 0;
 		}
 	}
-
-private:
-	uint8_t* start;
-	uint8_t* end;
 };
 
 class AbstractStream {

@@ -6,14 +6,8 @@
 namespace shb {
 
 class DefaultBufferManager : public AbstractBufferManager {
-	std::map<uint32_t, AbstractStream*> destructableBuffers;
-	std::map<uint32_t, AbstractStream*> indestructableBuffers;
-
-protected:
-	virtual uint8_t destroy(uint32_t bufferId);
-
 public:
-	DefaultBufferManager(const shb_CoreApi* core);
+	explicit DefaultBufferManager(const shb_CoreApi* core);
 
 	/**
 	 * Register the buffer or stream in the shared buffers library and transfer its
@@ -38,6 +32,17 @@ public:
 	 * be held elsewhere.
 	 */
 	void forceDestroy(uint32_t bufferId);
+
+protected:
+	virtual uint8_t destroy(uint32_t bufferId);
+
+private:
+	// Copying this class does not make sense, so we forbid it.
+	DefaultBufferManager(const DefaultBufferManager&);
+    DefaultBufferManager& operator=(const DefaultBufferManager&);
+
+	std::map<uint32_t, AbstractStream*> destructableBuffers;
+	std::map<uint32_t, AbstractStream*> indestructableBuffers;
 };
 
 }

@@ -17,7 +17,7 @@ class AbstractStream;
  */
 class AbstractBufferManager {
 public:
-	AbstractBufferManager(const shb_CoreApi* coreApi);
+	explicit AbstractBufferManager(const shb_CoreApi* coreApi);
 	virtual ~AbstractBufferManager();
 
 protected:
