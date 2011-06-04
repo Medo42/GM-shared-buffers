@@ -1,11 +1,11 @@
-#include "AbstractBuffer.hpp"
+// Included from AbstractBuffer.hpp.
 
 #include <limits>
 #include <cstring>
 
 namespace shb {
 
-size_t AbstractBuffer::read(uint8_t* data, size_t size) {
+inline size_t AbstractBuffer::read(uint8_t* data, size_t size) {
 	size_t dataPos = 0;
 	size_t readPos = getReadPos();
 	BufferFragment fragment;
@@ -19,20 +19,20 @@ size_t AbstractBuffer::read(uint8_t* data, size_t size) {
 	return dataPos;
 }
 
-size_t AbstractBuffer::peek(uint8_t* data, size_t size) {
+inline size_t AbstractBuffer::peek(uint8_t* data, size_t size) {
 	size_t oldReadPos = getReadPos();
 	size_t copied = read(data, size);
 	setReadPos(oldReadPos);
 	return copied;
 }
 
-size_t AbstractBuffer::skip(size_t size) {
+inline size_t AbstractBuffer::skip(size_t size) {
 	size_t oldReadPos = getReadPos();
 	setReadPos(oldReadPos+size);
 	return getReadPos()-oldReadPos;
 }
 
-size_t AbstractBuffer::write(const uint8_t* data, size_t size) {
+inline size_t AbstractBuffer::write(const uint8_t* data, size_t size) {
 	size_t dataPos = 0;
 	size_t writePos = getWritePos();
 	if(size > getLength()-writePos && size <= std::numeric_limits<size_t>::max() - writePos) {
@@ -51,11 +51,11 @@ size_t AbstractBuffer::write(const uint8_t* data, size_t size) {
 	return dataPos;
 }
 
-size_t AbstractBuffer::getBytesLeft() {
+inline size_t AbstractBuffer::getBytesLeft() {
 	return getLength() - getReadPos();
 }
 
-size_t copyStreamToBuffer(AbstractBuffer& dest, AbstractStream& source, size_t size) {
+inline size_t copyStreamToBuffer(AbstractBuffer& dest, AbstractStream& source, size_t size) {
 	size = std::min(size, source.getBytesLeft());
 	size_t writePos = dest.getWritePos();
 	size_t copied = 0;
@@ -80,7 +80,7 @@ size_t copyStreamToBuffer(AbstractBuffer& dest, AbstractStream& source, size_t s
 	return copied;
 }
 
-size_t copyStream(AbstractStream& dest, AbstractStream& source, size_t size) {
+inline size_t copyStream(AbstractStream& dest, AbstractStream& source, size_t size) {
 	AbstractBuffer* sourceAsBuffer = dynamic_cast<AbstractBuffer*>(&source);
 	AbstractBuffer* destAsBuffer = dynamic_cast<AbstractBuffer*>(&dest);
 	if(sourceAsBuffer) {
@@ -109,7 +109,7 @@ size_t copyStream(AbstractStream& dest, AbstractStream& source, size_t size) {
 	}
 }
 
-size_t copyBuffer(AbstractStream& dest, AbstractBuffer& source, size_t sourceStartPos, size_t size) {
+inline size_t copyBuffer(AbstractStream& dest, AbstractBuffer& source, size_t sourceStartPos, size_t size) {
 	size_t copied = 0;
 	BufferFragment fragment;
 	while(copied < size && (fragment = source.getFragment(sourceStartPos+copied), fragment.isValid())) {

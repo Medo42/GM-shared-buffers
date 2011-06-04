@@ -1,22 +1,23 @@
-#include "BufferProxy.hpp"
-#include "core/public_core_api.hpp"
+// Included from BufferProxy.hpp
+
+#include "../core/public_core_api.hpp"
 
 namespace shb {
 
-StreamProxy::StreamProxy(const shb_CoreApi* coreApi, uint32_t handle) :
+inline StreamProxy::StreamProxy(const shb_CoreApi* coreApi, uint32_t handle) :
 		coreApi(coreApi), handle(handle) {}
 
-bool StreamProxy::streamExists() {
+inline bool StreamProxy::streamExists() {
 	return (*coreApi->findStream)(handle) != 0;
 }
 
-void StreamProxy::destroy() {
+inline void StreamProxy::destroy() {
 	if(streamExists()) {
 		(*coreApi->destroy)(handle);
 	}
 }
 
-size_t StreamProxy::read(uint8_t* data, size_t size) {
+inline size_t StreamProxy::read(uint8_t* data, size_t size) {
 	shb_Stream* stream = (*coreApi->findStream)(handle);
 	if(stream) {
 		return (*stream->streamInterface->read)(stream->implementation, data, size);
@@ -25,7 +26,7 @@ size_t StreamProxy::read(uint8_t* data, size_t size) {
 	}
 }
 
-size_t StreamProxy::peek(uint8_t* data, size_t size) {
+inline size_t StreamProxy::peek(uint8_t* data, size_t size) {
 	shb_Stream* stream = (*coreApi->findStream)(handle);
 	if(stream) {
 		return (*stream->streamInterface->peek)(stream->implementation, data, size);
@@ -34,7 +35,7 @@ size_t StreamProxy::peek(uint8_t* data, size_t size) {
 	}
 }
 
-size_t StreamProxy::skip(size_t size) {
+inline size_t StreamProxy::skip(size_t size) {
 	shb_Stream* stream = (*coreApi->findStream)(handle);
 	if(stream) {
 		return (*stream->streamInterface->skip)(stream->implementation, size);
@@ -43,7 +44,7 @@ size_t StreamProxy::skip(size_t size) {
 	}
 }
 
-size_t StreamProxy::write(const uint8_t* data, size_t size) {
+inline size_t StreamProxy::write(const uint8_t* data, size_t size) {
 	shb_Stream* stream = (*coreApi->findStream)(handle);
 	if(stream) {
 		return (*stream->streamInterface->write)(stream->implementation, data, size);
@@ -52,7 +53,7 @@ size_t StreamProxy::write(const uint8_t* data, size_t size) {
 	}
 }
 
-size_t StreamProxy::getBytesLeft() {
+inline size_t StreamProxy::getBytesLeft() {
 	shb_Stream* stream = (*coreApi->findStream)(handle);
 	if(stream) {
 		return (*stream->streamInterface->getBytesLeft)(stream->implementation);
@@ -61,20 +62,20 @@ size_t StreamProxy::getBytesLeft() {
 	}
 }
 
-BufferProxy::BufferProxy(const shb_CoreApi* coreApi, uint32_t handle):
+inline BufferProxy::BufferProxy(const shb_CoreApi* coreApi, uint32_t handle):
 		coreApi(coreApi), handle(handle) {}
 
-bool BufferProxy::bufferExists() {
+inline bool BufferProxy::bufferExists() {
 	return (*coreApi->findBuffer)(handle) != 0;
 }
 
-void BufferProxy::destroy() {
+inline void BufferProxy::destroy() {
 	if(bufferExists()) {
 		(*coreApi->destroy)(handle);
 	}
 }
 
-size_t BufferProxy::read(uint8_t* data, size_t size) {
+inline size_t BufferProxy::read(uint8_t* data, size_t size) {
 	shb_Buffer* buffer = (*coreApi->findBuffer)(handle);
 	if(buffer) {
 		return (*buffer->streamInterface->read)(buffer->implementation, data, size);
@@ -83,7 +84,7 @@ size_t BufferProxy::read(uint8_t* data, size_t size) {
 	}
 }
 
-size_t BufferProxy::peek(uint8_t* data, size_t size) {
+inline size_t BufferProxy::peek(uint8_t* data, size_t size) {
 	shb_Buffer* buffer = (*coreApi->findBuffer)(handle);
 	if(buffer) {
 		return (*buffer->streamInterface->peek)(buffer->implementation, data, size);
@@ -92,7 +93,7 @@ size_t BufferProxy::peek(uint8_t* data, size_t size) {
 	}
 }
 
-size_t BufferProxy::skip(size_t size) {
+inline size_t BufferProxy::skip(size_t size) {
 	shb_Buffer* buffer = (*coreApi->findBuffer)(handle);
 	if(buffer) {
 		return (*buffer->streamInterface->skip)(buffer->implementation, size);
@@ -101,7 +102,7 @@ size_t BufferProxy::skip(size_t size) {
 	}
 }
 
-size_t BufferProxy::write(const uint8_t* data, size_t size) {
+inline size_t BufferProxy::write(const uint8_t* data, size_t size) {
 	shb_Buffer* buffer = (*coreApi->findBuffer)(handle);
 	if(buffer) {
 		return (*buffer->streamInterface->write)(buffer->implementation, data, size);
@@ -110,7 +111,7 @@ size_t BufferProxy::write(const uint8_t* data, size_t size) {
 	}
 }
 
-size_t BufferProxy::getBytesLeft() {
+inline size_t BufferProxy::getBytesLeft() {
 	shb_Buffer* buffer = (*coreApi->findBuffer)(handle);
 	if(buffer) {
 		return (*buffer->streamInterface->getBytesLeft)(buffer->implementation);
@@ -119,7 +120,7 @@ size_t BufferProxy::getBytesLeft() {
 	}
 }
 
-size_t BufferProxy::getReadPos() {
+inline size_t BufferProxy::getReadPos() {
 	shb_Buffer* buffer = (*coreApi->findBuffer)(handle);
 	if(buffer) {
 		return (*buffer->bufferInterface->getReadPos)(buffer->implementation);
@@ -128,7 +129,7 @@ size_t BufferProxy::getReadPos() {
 	}
 }
 
-size_t BufferProxy::getWritePos() {
+inline size_t BufferProxy::getWritePos() {
 	shb_Buffer* buffer = (*coreApi->findBuffer)(handle);
 	if(buffer) {
 		return (*buffer->bufferInterface->getWritePos)(buffer->implementation);
@@ -137,7 +138,7 @@ size_t BufferProxy::getWritePos() {
 	}
 }
 
-size_t BufferProxy::getLength() {
+inline size_t BufferProxy::getLength() {
 	shb_Buffer* buffer = (*coreApi->findBuffer)(handle);
 	if(buffer) {
 		return (*buffer->bufferInterface->getLength)(buffer->implementation);
@@ -146,21 +147,21 @@ size_t BufferProxy::getLength() {
 	}
 }
 
-void BufferProxy::setReadPos(size_t pos) {
+inline void BufferProxy::setReadPos(size_t pos) {
 	shb_Buffer* buffer = (*coreApi->findBuffer)(handle);
 	if(buffer) {
 		(*buffer->bufferInterface->setReadPos)(buffer->implementation, pos);
 	}
 }
 
-void BufferProxy::setWritePos(size_t pos) {
+inline void BufferProxy::setWritePos(size_t pos) {
 	shb_Buffer* buffer = (*coreApi->findBuffer)(handle);
 	if(buffer) {
 		(*buffer->bufferInterface->setWritePos)(buffer->implementation, pos);
 	}
 }
 
-bool BufferProxy::setLength(size_t length) {
+inline bool BufferProxy::setLength(size_t length) {
 	shb_Buffer* buffer = (*coreApi->findBuffer)(handle);
 	if(buffer) {
 		return (*buffer->bufferInterface->setLength)(buffer->implementation, length);
@@ -169,7 +170,7 @@ bool BufferProxy::setLength(size_t length) {
 	}
 }
 
-BufferFragment BufferProxy::getFragment(size_t pos) {
+inline BufferFragment BufferProxy::getFragment(size_t pos) {
 	shb_Buffer* buffer = (*coreApi->findBuffer)(handle);
 	if(buffer) {
 		shb_BufferFragment fragment;

@@ -3,25 +3,27 @@
 #include "HandleMap.hpp"
 #include "HandlePool.hpp"
 
+
+namespace {
 using namespace shb_internal;
 
-typedef struct {
+struct DestructableStream {
 	shb_Stream stream;
 	void* destroyHandlerImpl;
 	uint8_t (__stdcall *destroyCallback)(void* impl, uint32_t bufferId);
-} DestructableStream;
+};
 
-typedef struct {
+struct DestructableBuffer {
 	shb_Buffer buffer;
 	void* destroyHandlerImpl;
 	uint8_t (__stdcall *destroyCallback)(void* impl, uint32_t bufferId);
-} DestructableBuffer;
+};
 
-static HandlePool handlePool;
-static HandleMap<DestructableStream> streamHandles(handlePool);
-static HandleMap<DestructableBuffer> bufferHandles(handlePool);
+HandlePool handlePool;
+HandleMap<DestructableStream> streamHandles(handlePool);
+HandleMap<DestructableBuffer> bufferHandles(handlePool);
 
-static __stdcall shb_Stream* findStream(uint32_t id) {
+__stdcall shb_Stream* findStream(uint32_t id) {
 	DestructableStream* stream = streamHandles.find(id);
 	if(stream) {
 		return &(stream->stream);
@@ -35,7 +37,7 @@ static __stdcall shb_Stream* findStream(uint32_t id) {
 	return 0;
 }
 
-static __stdcall shb_Buffer* findBuffer(uint32_t id) {
+__stdcall shb_Buffer* findBuffer(uint32_t id) {
 	DestructableBuffer* buffer = bufferHandles.find(id);
 	if(buffer) {
 		return &(buffer->buffer);
@@ -43,7 +45,7 @@ static __stdcall shb_Buffer* findBuffer(uint32_t id) {
 	return 0;
 }
 
-static __stdcall uint32_t shareStream(
+__stdcall uint32_t shareStream(
 		void* stream,
 		shb_StreamInterface* streamInterface,
 		void* destroyHandlerImpl,
@@ -61,7 +63,7 @@ static __stdcall uint32_t shareStream(
 	return streamHandles.allocate(destructableStream);
 }
 
-static __stdcall uint32_t shareBuffer(
+__stdcall uint32_t shareBuffer(
 		void* buffer,
 		shb_StreamInterface *streamInterface,
 		shb_BufferInterface *bufferInterface,
@@ -81,7 +83,7 @@ static __stdcall uint32_t shareBuffer(
 	return bufferHandles.allocate(destructableBuffer);
 }
 
-static __stdcall void destroy(uint32_t id) {
+__stdcall void destroy(uint32_t id) {
 	DestructableStream* stream = streamHandles.find(id);
 	DestructableBuffer* buffer = bufferHandles.find(id);
 
@@ -96,7 +98,7 @@ static __stdcall void destroy(uint32_t id) {
 	}
 }
 
-static shb_CoreApi coreApi = {
+shb_CoreApi coreApi = {
 	&shareStream,
 	&findStream,
 
@@ -105,6 +107,8 @@ static shb_CoreApi coreApi = {
 
 	&destroy
 };
+
+}
 
 extern "C" __stdcall shb_CoreApi* shb_getCoreApiV1() {
 	return &coreApi;

@@ -1,6 +1,6 @@
 #include "gm.h"
-#include "../DefaultBufferManager.hpp"
-#include "../DefaultMemBuffer.hpp"
+#include <shared_buffers/DefaultBufferManager.hpp>
+#include <shared_buffers/DefaultMemBuffer.hpp>
 
 using namespace shb;
 DefaultBufferManager bufferManager(shbCoreApi);

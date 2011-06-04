@@ -48,3 +48,5 @@ private:
 };
 
 }
+
+#include "impl/BufferProxy.ipp"

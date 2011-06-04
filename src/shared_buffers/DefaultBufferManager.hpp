@@ -46,3 +46,5 @@ private:
 };
 
 }
+
+#include "impl/DefaultBufferManager.ipp"

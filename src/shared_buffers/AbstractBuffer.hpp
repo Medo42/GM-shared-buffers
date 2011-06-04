@@ -147,6 +147,24 @@ public:
 	 */
 	virtual size_t getBytesLeft();
 
+	/**
+	 * Convenience function.
+	 */
+	void clear() {
+		setLength(0);
+	}
+
+	/**
+	 * Convenience function.
+	 */
+	size_t read(uint8_t* data, size_t startPos, size_t size) {
+		size_t oldReadPos = getReadPos();
+		setReadPos(startPos);
+		size_t ammountRead = read(data, size);
+		setReadPos(oldReadPos);
+		return ammountRead;
+	}
+
 	virtual ~AbstractBuffer() {}
 };
 
@@ -180,3 +198,5 @@ size_t copyStream(AbstractStream& dest, AbstractStream& source, size_t size);
 size_t copyBuffer(AbstractStream& dest, AbstractBuffer& source, size_t sourceStartPos, size_t size);
 
 }
+
+#include "impl/AbstractBuffer.ipp"

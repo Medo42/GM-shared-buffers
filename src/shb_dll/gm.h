@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../BufferProxy.hpp"
+#include <shared_buffers/BufferProxy.hpp>
 
 #include <math.h>
 #include <limits>

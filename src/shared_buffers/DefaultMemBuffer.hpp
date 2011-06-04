@@ -35,3 +35,5 @@ private:
 };
 
 }
+
+#include "impl/DefaultMemBuffer.ipp"

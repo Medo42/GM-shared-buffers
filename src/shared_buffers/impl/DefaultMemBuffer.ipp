@@ -1,12 +1,12 @@
-#include "DefaultMemBuffer.hpp"
+// Included from DefaultMemBuffer.hpp
 
 #include <algorithm>
 #include <limits>
 #include <cstring>
 
-using namespace shb;
+namespace shb {
 
-DefaultMemBuffer::DefaultMemBuffer() : data(0), readPos(0), writePos(0), capacity(0), length(0) {
+inline DefaultMemBuffer::DefaultMemBuffer() : data(0), readPos(0), writePos(0), capacity(0), length(0) {
 	setLength(0);
 }
 
@@ -17,7 +17,7 @@ DefaultMemBuffer::DefaultMemBuffer() : data(0), readPos(0), writePos(0), capacit
  * provided array is not changed. The number of bytes
  * actually read is returned.
  */
-size_t DefaultMemBuffer::read(uint8_t* out, size_t size) {
+inline size_t DefaultMemBuffer::read(uint8_t* out, size_t size) {
 	size = std::min(size, getBytesLeft());
 	memmove(out, data+readPos, size);
 	readPos += size;
@@ -28,7 +28,7 @@ size_t DefaultMemBuffer::read(uint8_t* out, size_t size) {
  * Write array to the buffer, starting at writePos.
  * The buffer is enlarged if required.
  */
-size_t DefaultMemBuffer::write(const uint8_t *in, size_t size) {
+inline size_t DefaultMemBuffer::write(const uint8_t *in, size_t size) {
 	if(size > length-writePos && size <= std::numeric_limits<size_t>::max() - writePos) {
 		setLength(writePos+size);
 	}
@@ -38,27 +38,27 @@ size_t DefaultMemBuffer::write(const uint8_t *in, size_t size) {
 	return size;
 }
 
-size_t DefaultMemBuffer::getReadPos() {
+inline size_t DefaultMemBuffer::getReadPos() {
 	return readPos;
 }
 
-size_t DefaultMemBuffer::getWritePos() {
+inline size_t DefaultMemBuffer::getWritePos() {
 	return writePos;
 }
 
-size_t DefaultMemBuffer::getLength() {
+inline size_t DefaultMemBuffer::getLength() {
 	return length;
 }
 
-void DefaultMemBuffer::setReadPos(size_t pos) {
+inline void DefaultMemBuffer::setReadPos(size_t pos) {
 	readPos = std::min(pos, length);
 }
 
-void DefaultMemBuffer::setWritePos(size_t pos) {
+inline void DefaultMemBuffer::setWritePos(size_t pos) {
 	writePos = std::min(pos, length);
 }
 
-bool DefaultMemBuffer::setLength(size_t newLength) {
+inline bool DefaultMemBuffer::setLength(size_t newLength) {
 	size_t newCapacity = capacity;
 	if(newLength > capacity) {
 		// grow by at least 50% to ensure constant amortized insert time
@@ -90,10 +90,12 @@ bool DefaultMemBuffer::setLength(size_t newLength) {
 	return true;
 }
 
-BufferFragment DefaultMemBuffer::getFragment(size_t pos) {
+inline BufferFragment DefaultMemBuffer::getFragment(size_t pos) {
 	if(pos < length) {
 		return BufferFragment(data+pos, data+length);
 	} else {
 		return BufferFragment();
 	}
+}
+
 }

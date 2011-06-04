@@ -14,6 +14,10 @@ class AbstractStream;
  *
  * You probably won't need to create your own implementation, unless
  * DefaultBufferManager does not suit your needs.
+ *
+ * Important: Do not destroy a buffer manager as long as there are still buffers shared
+ * through it! Otherwise the library will try to call the destroy callback on a deleted
+ * object - NOT a good thing!
  */
 class AbstractBufferManager {
 public:
@@ -51,3 +55,5 @@ private:
 };
 
 }
+
+#include "impl/AbstractBufferManager.ipp"

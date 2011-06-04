@@ -1,14 +1,14 @@
-#include "DefaultBufferManager.hpp"
+//Included from DefaultBufferManager.hpp
 
-#include "AbstractBuffer.hpp"
-#include "core/public_core_api.hpp"
+#include "../AbstractBuffer.hpp"
+#include "../core/public_core_api.hpp"
 
-using namespace shb;
+namespace shb {
 
-DefaultBufferManager::DefaultBufferManager(const shb_CoreApi* coreApi) :
+inline DefaultBufferManager::DefaultBufferManager(const shb_CoreApi* coreApi) :
 		AbstractBufferManager(coreApi), destructableBuffers(), indestructableBuffers() {}
 
-uint8_t DefaultBufferManager::destroyCallback(uint32_t bufferId) {
+inline uint8_t DefaultBufferManager::destroyCallback(uint32_t bufferId) {
 	if(destructableBuffers.count(bufferId) != 0) {
 		delete destructableBuffers[bufferId];
 		destructableBuffers.erase(bufferId);
@@ -18,7 +18,7 @@ uint8_t DefaultBufferManager::destroyCallback(uint32_t bufferId) {
 	}
 }
 
-uint32_t DefaultBufferManager::shareTransferOwnership(AbstractStream* stream, bool destructable) {
+inline uint32_t DefaultBufferManager::shareTransferOwnership(AbstractStream* stream, bool destructable) {
 	AbstractBuffer* buffer = dynamic_cast<AbstractBuffer*>(stream);
 	uint32_t bufferId;
 	if(buffer) {
@@ -35,7 +35,7 @@ uint32_t DefaultBufferManager::shareTransferOwnership(AbstractStream* stream, bo
 	return bufferId;
 }
 
-void DefaultBufferManager::forceDestroy(uint32_t bufferId) {
+inline void DefaultBufferManager::forceDestroy(uint32_t bufferId) {
 	if(indestructableBuffers.count(bufferId) != 0) {
 		destructableBuffers[bufferId] = indestructableBuffers[bufferId];
 		indestructableBuffers.erase(bufferId);
@@ -45,4 +45,6 @@ void DefaultBufferManager::forceDestroy(uint32_t bufferId) {
 	}
 
 	(*coreApi->destroy)(bufferId);
+}
+
 }
