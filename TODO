@@ -1,0 +1,2 @@
+- Endianness, both per-handle and global(default on create)
+- Doc: Info about rules (e.g. no access in global dtors), thread safety (only access from main GM thread)
