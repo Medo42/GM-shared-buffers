@@ -90,12 +90,4 @@ inline bool DefaultMemBuffer::setLength(size_t newLength) {
 	return true;
 }
 
-inline BufferFragment DefaultMemBuffer::getFragment(size_t pos) {
-	if(pos < length) {
-		return BufferFragment(data+pos, data+length);
-	} else {
-		return BufferFragment();
-	}
-}
-
 }

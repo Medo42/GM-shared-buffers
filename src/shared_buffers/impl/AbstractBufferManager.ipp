@@ -50,13 +50,6 @@ inline __stdcall uint8_t setLength(void* impl, size_t length) {
 	return static_cast<AbstractBuffer*>(static_cast<AbstractStream*>(impl))->setLength(length);
 }
 
-inline __stdcall void getFragment(void* impl, shb_BufferFragment* fragment, size_t pos) {
-	AbstractBuffer* buffer = static_cast<AbstractBuffer*>(static_cast<AbstractStream*>(impl));
-	BufferFragment resultFragment = buffer->getFragment(pos);
-	fragment->start = resultFragment.getStart();
-	fragment->end = resultFragment.getEnd();
-}
-
 inline shb_StreamInterface* getAbstractStreamInterface() {
 	static shb_StreamInterface abstractStreamInterface = {
 		&read,
@@ -75,8 +68,7 @@ inline shb_BufferInterface* getAbstractBufferInterface() {
 		&getLength,
 		&setReadPos,
 		&setWritePos,
-		&setLength,
-		&getFragment
+		&setLength
 	};
 	return &abstractBufferInterface;
 }

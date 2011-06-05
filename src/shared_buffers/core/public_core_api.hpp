@@ -23,7 +23,6 @@ struct shb_BufferInterface {
 	void (__stdcall *setReadPos)(void* impl, size_t pos);
 	void (__stdcall *setWritePos)(void* impl, size_t pos);
 	uint8_t (__stdcall *setLength)(void* impl, size_t length);
-	void (__stdcall *getFragment)(void *impl, shb_BufferFragment* outFragment, size_t startIndex);
 };
 
 struct shb_Stream {

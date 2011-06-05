@@ -170,15 +170,4 @@ inline bool BufferProxy::setLength(size_t length) {
 	}
 }
 
-inline BufferFragment BufferProxy::getFragment(size_t pos) {
-	shb_Buffer* buffer = (*coreApi->findBuffer)(handle);
-	if(buffer) {
-		shb_BufferFragment fragment;
-		(*buffer->bufferInterface->getFragment)(buffer->implementation, &fragment, pos);
-		return BufferFragment(fragment.start, fragment.end);
-	} else {
-		return BufferFragment();
-	}
-}
-
 }

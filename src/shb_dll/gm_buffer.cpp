@@ -44,34 +44,37 @@ gmexport double buffer_read_from_file(double id, char* filename) {
 		return -1;	// File not found
 	}
 	fseek(f, 0, SEEK_END);
-	long size = ftell(f);
+	long signedSize = ftell(f);
 	fseek(f, 0, SEEK_SET);
-	if(size < 0) {
+	if(signedSize < 0) {
 		fclose(f);
 		return -2;	// File too large
 	}
 
+	size_t size = signedSize;
 	BufferProxy buffer = getBuffer(id);
+	buffer.setReadPos(0);
+	buffer.setWritePos(0);
 	if(!buffer.setLength(size)) {
 		fclose(f);
 		buffer.setLength(0);
 		return -3;	// Buffer too small
 	}
 
-	size_t writePos = 0;
-	BufferFragment fragment;
-	while(fragment = buffer.getFragment(writePos), fragment.isValid()) {
-		if(fread(fragment.getStart(), sizeof(uint8_t), fragment.getLength(), f) != fragment.getLength()) {
+	size_t copied = 0;
+	uint8_t tempBuffer[4096];
+	while(copied < size) {
+		size_t copySize = std::min(size - copied, (size_t)4096);
+		if(fread(tempBuffer, sizeof(uint8_t), copySize, f) != copySize) {
 			fclose(f);
 			buffer.setLength(0);
 			return -4;	// Read error
 		} else {
-			writePos += fragment.getLength();
+			buffer.write(tempBuffer, copySize);
+			copied += copySize;
 		}
 	}
 
-	buffer.setReadPos(0);
-	buffer.setWritePos(writePos);
 	fclose(f);
 	return 1;	// Success
 }
@@ -83,18 +86,25 @@ gmexport double buffer_write_to_file(double id, char* filename) {
 	}
 
 	BufferProxy buffer = getBuffer(id);
+	size_t oldReadPos = buffer.getReadPos();
+	buffer.setReadPos(0);
 
-	size_t pos = 0;
-	BufferFragment fragment;
-	while(fragment = buffer.getFragment(pos), fragment.isValid()) {
-		if(fwrite(fragment.getStart(), sizeof(uint8_t), fragment.getLength(), f) != fragment.getLength()) {
+	size_t copied = 0;
+	size_t size = buffer.getLength();
+	uint8_t tempBuffer[4096];
+	while(copied < size) {
+		size_t copySize = std::min(size - copied, (size_t)4096);
+		buffer.read(tempBuffer, copySize);
+		if(fwrite(tempBuffer, sizeof(uint8_t), copySize, f) != copySize) {
+			buffer.setReadPos(oldReadPos);
 			fclose(f);
 			return -2;	// I/O-Error writing to the file
 		} else {
-			pos += fragment.getLength();
+			copied += copySize;
 		}
 	}
 
+	buffer.setReadPos(oldReadPos);
 	fclose(f);
 	return 1;	// Success
 }

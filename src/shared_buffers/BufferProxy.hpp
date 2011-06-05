@@ -40,7 +40,6 @@ public:
 	virtual void setReadPos(size_t pos);
 	virtual void setWritePos(size_t pos);
 	virtual bool setLength(size_t length);
-	virtual BufferFragment getFragment(size_t pos);
 
 private:
 	const shb_CoreApi* const coreApi;

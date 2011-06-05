@@ -6,32 +6,6 @@
 
 namespace shb {
 
-class BufferFragment {
-private:
-	uint8_t* start;
-	uint8_t* end;
-
-public:
-	BufferFragment() : start(0), end(0) {}
-	BufferFragment(uint8_t *start, uint8_t *end)
-		: start(start),
-		  end(start ? std::max(start, end) : (uint8_t*)0) {}
-
-	bool isValid() const { return start != 0; }
-	uint8_t* getStart() { return start; }
-	uint8_t* getEnd() { return end; }
-	const uint8_t* getStart() const { return start; }
-	const uint8_t* getEnd() const { return end; }
-
-	size_t getLength() const {
-		if(start) {
-			return end-start;
-		} else {
-			return 0;
-		}
-	}
-};
-
 class AbstractStream {
 public:
 	/**
@@ -101,16 +75,11 @@ public:
  * All data in the index range [0, min(length, newLength)-1] must be kept intact. If the resize is
  * successful, true is returned. Otherwise, false is returned and the contents of the buffer are not modified.
  * In that case, the new length of the buffer may be anything between the old size and the requested size.
- *
- * getFragment(pos) returns two pointers (start and end) in a struct. If pos<length, start shall point
- * to the buffer byte at index pos, and end shall point directly behind the last byte of the same memory block.
- * More formally, for start<=ptr<end, ptr must point to the buffer byte at index pos+ptr-start. The last
- * fragment must not include any bytes after the last valid buffer byte.
- * If pos>=length, both start and end shall be null pointers. The pointers returned must remain
- * valid until a setter function or write() is called on the buffer.
  */
 class AbstractBuffer : public AbstractStream {
 public:
+	virtual size_t read(uint8_t* data, size_t size);
+	virtual size_t write(const uint8_t* data, size_t size);
 	virtual size_t getReadPos() = 0;
 	virtual size_t getWritePos() = 0;
 	virtual void setReadPos(size_t pos) = 0;
@@ -118,13 +87,6 @@ public:
 
 	virtual size_t getLength() = 0;
 	virtual bool setLength(size_t length) = 0;
-
-	virtual BufferFragment getFragment(size_t pos) = 0;
-
-	/**
-	 * Default implementation using getFragment(), getReadPos() and setReadPos().
-	 */
-	virtual size_t read(uint8_t* data, size_t size);
 
 	/**
 	 * Default implementation using read(), getReadPos() and setReadPos().
@@ -135,12 +97,6 @@ public:
 	 * Default implementation using getReadPos() and setReadPos().
 	 */
 	virtual size_t skip(size_t size);
-
-	/**
-	 * Default implementation using getFragment(), getWritePos(), setWritePos(),
-	 * getLength() and setLength().
-	 */
-	virtual size_t write(const uint8_t* data, size_t size);
 
 	/**
 	 * Default implementation using getLength() and getReadPos().
@@ -178,11 +134,6 @@ public:
  * even if fewer bytes can be written.
  *
  * The actual number of bytes written is returned.
- *
- * Based on the runtime type of the arguments, an optimized copy routine is selected.
- * An actual stream to stream copy reads data into a temporary array first and then writes
- * it to the destination, so all data is copied twice. If dest or source is a buffer,
- * its internal memory can be accessed directly, so only one copy is needed.
  */
 size_t copyStream(AbstractStream& dest, AbstractStream& source, size_t size);
 

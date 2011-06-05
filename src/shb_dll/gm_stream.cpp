@@ -168,21 +168,8 @@ gmexport double stream_write_hex(double id, const char* string) {
 
 gmexport double stream_write_stream_part(double id, double source_id, double bytes) {
 	StreamProxy destStream = getStream(id);
-	BufferProxy destBuffer = getBuffer(id);
 	StreamProxy sourceStream = getStream(source_id);
-	BufferProxy sourceBuffer = getBuffer(source_id);
-
-	/*
-	 * Try to call copyStream with a buffer as one argument, so that an optimized copy routine
-	 * can be used.
-	 */
-	if(sourceBuffer.bufferExists()) {
-		return shb::copyStream(destStream, sourceBuffer, bytes);
-	} else if(destBuffer.bufferExists()) {
-		return shb::copyStream(destBuffer, sourceStream, bytes);
-	} else {
-		return shb::copyStream(destStream, sourceStream, bytes);
-	}
+	return shb::copyStream(destStream, sourceStream, bytes);
 }
 
 gmexport double stream_write_stream(double id, double source_id) {
